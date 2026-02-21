@@ -236,3 +236,103 @@ async def assess_knowledge_level(score: float, correct: int, total: int) -> dict
     )
     response = _ask(prompt, max_tokens=512)
     return _parse_json_response(response)
+
+
+# ---------------------------------------------------------------------------
+# Lesson content generation
+# ---------------------------------------------------------------------------
+
+LESSON_CONTENT_PROMPT = """
+You are an expert teacher creating a detailed lesson page for a student.
+
+Topic: {topic_title}
+Topic summary: {topic_summary}
+Key concepts: {key_concepts}
+Subject context: {subject}
+
+Create a multi-section lesson that thoroughly explains this topic to a beginner-to-intermediate student.
+
+Return ONLY valid JSON (no markdown) in this exact format:
+{{
+  "sections": [
+    {{
+      "type": "intro",
+      "title": "Introduction",
+      "content": "<engaging 3-4 sentence introduction that hooks the student and explains why this topic matters>"
+    }},
+    {{
+      "type": "explanation",
+      "title": "<descriptive title for core explanation>",
+      "content": "<thorough explanation of the main concepts, 5-8 sentences, use plain language>"
+    }},
+    {{
+      "type": "explanation",
+      "title": "<title for second key idea>",
+      "content": "<explanation of another key aspect, 4-6 sentences>"
+    }},
+    {{
+      "type": "example",
+      "title": "Real-World Example",
+      "content": "<concrete, relatable example that illustrates the concept, 4-5 sentences>"
+    }},
+    {{
+      "type": "tips",
+      "title": "Key Takeaways",
+      "content": "<3-5 bullet points separated by newlines, starting each with • , summarising the most important points>"
+    }}
+  ]
+}}
+
+Rules:
+- Write in a friendly, encouraging tone
+- Avoid jargon — explain terms when you use them
+- Keep each section focused and concise
+- The example should be something a student can easily picture
+"""
+
+LESSON_QA_SYSTEM = """You are a helpful tutor assisting a student who is studying the following topic.
+
+Topic: {topic_title}
+Topic summary: {topic_summary}
+Key concepts: {key_concepts}
+
+Answer questions clearly and concisely. If the student asks something off-topic, gently redirect them to the topic at hand. Keep answers under 150 words unless the question requires detail."""
+
+
+async def generate_lesson(topic: dict, subject: str = "") -> list[dict]:
+    """Generate multi-section lesson content for a topic."""
+    prompt = LESSON_CONTENT_PROMPT.format(
+        topic_title=topic["title"],
+        topic_summary=topic.get("summary", ""),
+        key_concepts=", ".join(topic.get("key_concepts", [])),
+        subject=subject,
+    )
+    response = _ask(prompt, max_tokens=4096)
+    data = _parse_json_response(response)
+    return data["sections"]
+
+
+async def answer_question(
+    topic: dict,
+    question: str,
+    history: list[dict],
+) -> str:
+    """Answer a student question about a topic, with conversation history."""
+    system = LESSON_QA_SYSTEM.format(
+        topic_title=topic["title"],
+        topic_summary=topic.get("summary", ""),
+        key_concepts=", ".join(topic.get("key_concepts", [])),
+    )
+
+    messages = []
+    for msg in history:
+        messages.append({"role": msg["role"], "content": msg["content"]})
+    messages.append({"role": "user", "content": question})
+
+    response = _client.messages.create(
+        model=_MODEL,
+        max_tokens=512,
+        system=system,
+        messages=messages,
+    )
+    return response.content[0].text

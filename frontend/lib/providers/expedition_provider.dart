@@ -165,15 +165,55 @@ const _expeditionDuration = Duration(minutes: 30);
 class ExpeditionProvider extends ChangeNotifier {
   List<ActiveExpedition> _expeditions = [];
   Map<int, CompanionProgress> _companionProgress = {};
+  int _materials = 0;
+  Map<String, int> _buildingLevels = {};
   Timer? _ticker;
 
   List<ActiveExpedition> get expeditions => _expeditions;
   List<ActiveExpedition> get active =>
       _expeditions.where((e) => !e.claimed).toList();
   Map<int, CompanionProgress> get companionProgress => _companionProgress;
+  int get materials => _materials;
 
   CompanionProgress progressFor(int characterId) =>
       _companionProgress[characterId] ?? CompanionProgress();
+
+  int buildingLevel(String buildingId) => _buildingLevels[buildingId] ?? 1;
+
+  /// Spends [amount] materials. Returns false if not enough.
+  bool spendMaterials(int amount) {
+    if (_materials < amount) return false;
+    _materials -= amount;
+    _save();
+    notifyListeners();
+    return true;
+  }
+
+  void addMaterials(int amount) {
+    _materials += amount;
+    _save();
+    notifyListeners();
+  }
+
+  /// Upgrades a building by one level. Returns false if already max or not enough materials.
+  bool upgradeBuilding(String buildingId, int cost, int maxLevel) {
+    final current = buildingLevel(buildingId);
+    if (current >= maxLevel) return false;
+    if (!spendMaterials(cost)) return false;
+    _buildingLevels[buildingId] = current + 1;
+    _save();
+    notifyListeners();
+    return true;
+  }
+
+  /// Adds XP directly to a companion (used by Hospital).
+  void addXpToCompanion(int companionId, int amount) {
+    final progress = _companionProgress[companionId] ?? CompanionProgress();
+    progress.addXp(amount);
+    _companionProgress[companionId] = progress;
+    _save();
+    notifyListeners();
+  }
 
   Future<void> init() async {
     await _load();
@@ -223,6 +263,7 @@ class ExpeditionProvider extends ChangeNotifier {
       _companionProgress[id] = progress;
     }
 
+    _materials += exp.location.materials;
     await _save();
     notifyListeners();
     return {
@@ -263,6 +304,9 @@ class ExpeditionProvider extends ChangeNotifier {
         'companion_progress',
         jsonEncode(_companionProgress
             .map((k, v) => MapEntry(k.toString(), v.toJson()))));
+    prefs.setInt('materials', _materials);
+    prefs.setString('building_levels',
+        jsonEncode(_buildingLevels.map((k, v) => MapEntry(k, v))));
   }
 
   Future<void> _load() async {
@@ -279,6 +323,12 @@ class ExpeditionProvider extends ChangeNotifier {
       final map = jsonDecode(progJson) as Map<String, dynamic>;
       _companionProgress = map.map((k, v) =>
           MapEntry(int.parse(k), CompanionProgress.fromJson(v as Map<String, dynamic>)));
+    }
+    _materials = prefs.getInt('materials') ?? 0;
+    final buildJson = prefs.getString('building_levels');
+    if (buildJson != null) {
+      final map = jsonDecode(buildJson) as Map<String, dynamic>;
+      _buildingLevels = map.map((k, v) => MapEntry(k, v as int));
     }
   }
 }

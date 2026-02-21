@@ -9,6 +9,7 @@ class Ability {
   final String name;
   final String emoji;
   final String description;
+  final int manaCost;
   final double damageMultiplier;   // ATK * multiplier dealt to boss (0 = no dmg)
   final int healAllAmount;          // HP restored to all living companions (0 = none)
   final int dotDamage;              // damage per boss turn (0 = none)
@@ -22,6 +23,7 @@ class Ability {
     required this.name,
     required this.emoji,
     required this.description,
+    this.manaCost = 50,
     this.damageMultiplier = 0,
     this.healAllAmount = 0,
     this.dotDamage = 0,
@@ -38,16 +40,19 @@ const Map<String, Ability> companionAbilities = {
   'Sparky': Ability(
     name: 'Spark Overload', emoji: '⚡',
     description: '1.8× ATK electric burst',
+    manaCost: 50,
     damageMultiplier: 1.8,
   ),
   'Leafy': Ability(
     name: 'Nature Mend', emoji: '🌿',
     description: 'Restore 25 HP to all companions',
+    manaCost: 40,
     healAllAmount: 25,
   ),
   'Chisel': Ability(
     name: 'Stone Shatter', emoji: '🪨',
     description: '1.4× ATK + reduce boss ATK 25% for 2 turns',
+    manaCost: 50,
     damageMultiplier: 1.4,
     bossAtkDebuff: 0.25,
     debuffDuration: 2,
@@ -55,6 +60,7 @@ const Map<String, Ability> companionAbilities = {
   'Bubbles': Ability(
     name: 'Acid Splash', emoji: '🧪',
     description: '1.2× ATK + 10 DoT for 3 turns',
+    manaCost: 45,
     damageMultiplier: 1.2,
     dotDamage: 10,
     dotDuration: 3,
@@ -62,11 +68,13 @@ const Map<String, Ability> companionAbilities = {
   'Nova': Ability(
     name: 'Supernova', emoji: '💫',
     description: '2.2× ATK cosmic blast',
+    manaCost: 60,
     damageMultiplier: 2.2,
   ),
   'Cipher': Ability(
     name: 'System Hack', emoji: '💻',
     description: '1.5× ATK + reduce boss ATK 40% for 2 turns',
+    manaCost: 60,
     damageMultiplier: 1.5,
     bossAtkDebuff: 0.40,
     debuffDuration: 2,
@@ -74,17 +82,20 @@ const Map<String, Ability> companionAbilities = {
   'Lyra': Ability(
     name: 'Battle Hymn', emoji: '🎵',
     description: 'Buff all companions ATK +30% for 3 turns',
+    manaCost: 50,
     atkBuffMultiplier: 0.30,
     buffDuration: 3,
   ),
   'Arcanum': Ability(
     name: 'Arcane Blast', emoji: '🔮',
     description: '2.8× ATK arcane explosion',
+    manaCost: 70,
     damageMultiplier: 2.8,
   ),
   'Solaris': Ability(
     name: 'Solar Flare', emoji: '☀️',
     description: '2.0× ATK + 15 DoT for 2 turns',
+    manaCost: 65,
     damageMultiplier: 2.0,
     dotDamage: 15,
     dotDuration: 2,
@@ -92,6 +103,7 @@ const Map<String, Ability> companionAbilities = {
   'Omnisage': Ability(
     name: 'Omnistrike', emoji: '🌟',
     description: '3.5× ATK + heal all companions 20 HP',
+    manaCost: 80,
     damageMultiplier: 3.5,
     healAllAmount: 20,
   ),
@@ -100,11 +112,15 @@ const Map<String, Ability> companionAbilities = {
 const Ability _defaultAbility = Ability(
   name: 'Power Strike', emoji: '⚔️',
   description: '1.5× ATK strike',
+  manaCost: 50,
   damageMultiplier: 1.5,
 );
 
 Ability abilityFor(String companionName) =>
     companionAbilities[companionName] ?? _defaultAbility;
+
+// Amount of mana gained per normal attack
+const int manaPerAttack = 25;
 
 // ---------------------------------------------------------------------------
 // Status effect
@@ -140,11 +156,13 @@ class CombatEntity {
   final String emoji;
   final bool isCompanion;
   final int baseAtk;
-  final int spd;
+  final int spd;        // internal only — drives ATB, not shown in UI
   final int maxHp;
+  final int maxMana;
   final Ability? ability;
 
   int currentHp;
+  int currentMana;
   double gauge = 0;
   List<StatusEffect> statusEffects = [];
 
@@ -156,12 +174,19 @@ class CombatEntity {
     required this.baseAtk,
     required this.spd,
     required this.maxHp,
+    this.maxMana = 0,
     this.ability,
-  }) : currentHp = maxHp;
+  })  : currentHp = maxHp,
+        currentMana = 0;
 
   bool get isAlive => currentHp > 0;
 
   double get hpFraction => (currentHp / maxHp).clamp(0.0, 1.0);
+  double get manaFraction =>
+      maxMana > 0 ? (currentMana / maxMana).clamp(0.0, 1.0) : 0.0;
+
+  bool get canUseAbility =>
+      ability != null && currentMana >= ability!.manaCost;
 
   // Effective ATK considering buffs/debuffs
   int get effectiveAtk {
@@ -179,6 +204,14 @@ class CombatEntity {
 
   void heal(int amount) {
     currentHp = (currentHp + amount).clamp(0, maxHp);
+  }
+
+  void gainMana(int amount) {
+    currentMana = (currentMana + amount).clamp(0, maxMana);
+  }
+
+  void spendMana(int amount) {
+    currentMana = (currentMana - amount).clamp(0, maxMana);
   }
 
   void tickStatusEffects() {
@@ -243,22 +276,35 @@ const Map<String, BossData> bossByLocation = {
 // Stat calculation
 // ---------------------------------------------------------------------------
 
+/// Returns (maxHp, baseAtk, maxMana) for a companion by rarity + level.
+(int, int, int) companionStats(String rarity, int level) {
+  switch (rarity) {
+    case 'legendary':
+      return (100 + level * 15, 25 + level * 4, 100);
+    case 'epic':
+      return (85 + level * 12, 18 + level * 3, 80);
+    case 'rare':
+      return (70 + level * 10, 14 + level * 2, 70);
+    default:
+      return (60 + level * 8, 10 + level * 2, 60);
+  }
+}
+
 CombatEntity companionToEntity(
     Map<String, dynamic> character, int level) {
   final rarity = character['rarity'] as String;
   final name = character['name'] as String;
   final id = character['id'].toString();
 
-  int maxHp, baseAtk, spd;
+  final (maxHp, baseAtk, maxMana) = companionStats(rarity, level);
+
+  // Speed still drives ATB internally but is not exposed in the UI
+  int spd;
   switch (rarity) {
-    case 'legendary':
-      maxHp = 100 + level * 15; baseAtk = 25 + level * 4; spd = 13 + level;
-    case 'epic':
-      maxHp = 85 + level * 12; baseAtk = 18 + level * 3; spd = 10 + level;
-    case 'rare':
-      maxHp = 70 + level * 10; baseAtk = 14 + level * 2; spd = 8 + level;
-    default:
-      maxHp = 60 + level * 8;  baseAtk = 10 + level * 2; spd = 6 + level;
+    case 'legendary': spd = 13 + level;
+    case 'epic':      spd = 10 + level;
+    case 'rare':      spd = 8 + level;
+    default:          spd = 6 + level;
   }
 
   return CombatEntity(
@@ -269,6 +315,7 @@ CombatEntity companionToEntity(
     baseAtk: baseAtk,
     spd: spd,
     maxHp: maxHp,
+    maxMana: maxMana,
     ability: abilityFor(name),
   );
 }

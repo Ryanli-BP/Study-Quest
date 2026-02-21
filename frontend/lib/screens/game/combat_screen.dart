@@ -137,6 +137,7 @@ class _CombatScreenState extends State<CombatScreen>
     if (_phase != CombatPhase.playerTurn) return;
     final dmg = _currentTurn.effectiveAtk;
     _boss.takeDamage(dmg);
+    _currentTurn.gainMana(manaPerAttack);
     _bossShakeCtrl.forward(from: 0);
     _bossFlashCtrl.forward(from: 0);
     _log.add('${_currentTurn.name} attacks for $dmg damage!');
@@ -147,6 +148,8 @@ class _CombatScreenState extends State<CombatScreen>
     if (_phase != CombatPhase.playerTurn) return;
     final ability = _currentTurn.ability;
     if (ability == null) return;
+    if (!_currentTurn.canUseAbility) return;
+    _currentTurn.spendMana(ability.manaCost);
 
     _log.add('${_currentTurn.name} uses ${ability.emoji} ${ability.name}!');
 
@@ -528,7 +531,7 @@ class _CompanionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Row(
         children: companions
             .map((c) => Expanded(
@@ -602,14 +605,25 @@ class _CompanionCard extends StatelessWidget {
                       ]
                     : null,
               ),
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(8),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Emoji
-                  Text(
-                    companion.isAlive ? companion.emoji : '💀',
-                    style: const TextStyle(fontSize: 30),
+                  // Avatar
+                  SizedBox(
+                    width: 50,
+                    height: 50,
+                    child: companion.isAlive
+                        ? Image.asset(
+                            'assets/images/${companion.name}.png',
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => Text(
+                              companion.emoji,
+                              style: const TextStyle(fontSize: 30),
+                            ),
+                          )
+                        : const Text('💀',
+                            style: TextStyle(fontSize: 30)),
                   ),
                   const SizedBox(height: 6),
                   // Name
@@ -629,7 +643,7 @@ class _CompanionCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   _StatRow('⚔️', '${companion.effectiveAtk} ATK'),
                   const SizedBox(height: 2),
-                  _StatRow('💨', '${companion.spd} SPD'),
+                  _StatRow('💧', '${companion.currentMana}/${companion.maxMana} MP'),
                   const SizedBox(height: 8),
                   // HP bar
                   _MiniBar(
@@ -642,11 +656,11 @@ class _CompanionCard extends StatelessWidget {
                     label: 'HP',
                   ),
                   const SizedBox(height: 4),
-                  // SPD gauge bar
+                  // Mana bar
                   _MiniBar(
-                    value: (companion.gauge / 100).clamp(0.0, 1.0),
-                    color: const Color(0xFF7B61FF),
-                    label: 'SPD',
+                    value: companion.manaFraction,
+                    color: const Color(0xFF29B6F6),
+                    label: 'MP',
                   ),
                   // Status effects
                   if (companion.statusEffects.isNotEmpty) ...[
@@ -733,7 +747,6 @@ class _CombatLog extends StatelessWidget {
     return Container(
       color: const Color(0xFF0D0D1A),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      height: 58,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: recent
@@ -804,6 +817,7 @@ class _PlayerActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ability = entity.ability;
+    final canUse = entity.canUseAbility;
     return Container(
       color: const Color(0xFF1A1A2E),
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
@@ -822,9 +836,10 @@ class _PlayerActions extends StatelessWidget {
               Expanded(
                 child: _ActionBtn(
                   label: '⚔️ Attack',
-                  subtitle: '${entity.effectiveAtk} dmg',
+                  subtitle: '${entity.effectiveAtk} dmg  (+${manaPerAttack} MP)',
                   color: Colors.blueGrey,
                   onTap: onAttack,
+                  enabled: true,
                 ),
               ),
               const SizedBox(width: 10),
@@ -832,9 +847,10 @@ class _PlayerActions extends StatelessWidget {
                 Expanded(
                   child: _ActionBtn(
                     label: '${ability.emoji} ${ability.name}',
-                    subtitle: ability.description,
+                    subtitle: '${ability.description}  (${ability.manaCost} MP)',
                     color: const Color(0xFF7B61FF),
-                    onTap: onAbility,
+                    onTap: canUse ? onAbility : () {},
+                    enabled: canUse,
                   ),
                 ),
             ],
@@ -850,37 +866,44 @@ class _ActionBtn extends StatelessWidget {
   final String subtitle;
   final Color color;
   final VoidCallback onTap;
+  final bool enabled;
 
-  const _ActionBtn(
-      {required this.label,
-      required this.subtitle,
-      required this.color,
-      required this.onTap});
+  const _ActionBtn({
+    required this.label,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+    this.enabled = true,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveColor = enabled ? color : Colors.white24;
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.6)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13)),
-            Text(subtitle,
-                style: const TextStyle(color: Colors.white54, fontSize: 10),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis),
-          ],
+      onTap: enabled ? onTap : null,
+      child: Opacity(
+        opacity: enabled ? 1.0 : 0.45,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+          decoration: BoxDecoration(
+            color: effectiveColor.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: effectiveColor.withOpacity(0.6)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13)),
+              Text(subtitle,
+                  style: const TextStyle(color: Colors.white54, fontSize: 10),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
+            ],
+          ),
         ),
       ),
     );

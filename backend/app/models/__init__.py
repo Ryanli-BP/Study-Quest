@@ -3,6 +3,7 @@ from app.models.material import UploadedMaterial, Syllabus
 from app.models.quiz import Quiz, QuizAttempt
 from app.models.gacha import GachaCharacter, UserCharacter
 from app.models.token import TokenTransaction
+from app.models.lesson_content import LessonContent
 
 __all__ = [
     "User",
@@ -13,4 +14,5 @@ __all__ = [
     "GachaCharacter",
     "UserCharacter",
     "TokenTransaction",
+    "LessonContent",
 ]

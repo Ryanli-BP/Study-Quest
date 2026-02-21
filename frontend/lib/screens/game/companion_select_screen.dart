@@ -227,13 +227,23 @@ class _CompanionSelectScreenState extends State<CompanionSelectScreen> {
                                 children: [
                                   Stack(
                                     children: [
-                                      CircleAvatar(
-                                        radius: 22,
-                                        backgroundColor:
-                                            color.withOpacity(0.7),
-                                        child: Text(
-                                          _rarityEmoji(rarity),
-                                          style: const TextStyle(fontSize: 20),
+                                      SizedBox(
+                                        width: 52,
+                                        height: 52,
+                                        child: Image.asset(
+                                          'assets/images/${char['name']}.png',
+                                          fit: BoxFit.contain,
+                                          errorBuilder: (_, __, ___) =>
+                                              CircleAvatar(
+                                            radius: 26,
+                                            backgroundColor:
+                                                color.withOpacity(0.7),
+                                            child: Text(
+                                              _rarityEmoji(rarity),
+                                              style: const TextStyle(
+                                                  fontSize: 20),
+                                            ),
+                                          ),
                                         ),
                                       ),
                                       if (selected)
@@ -241,14 +251,14 @@ class _CompanionSelectScreenState extends State<CompanionSelectScreen> {
                                           right: 0,
                                           top: 0,
                                           child: Container(
-                                            width: 16,
-                                            height: 16,
+                                            width: 18,
+                                            height: 18,
                                             decoration: BoxDecoration(
                                               color: color,
                                               shape: BoxShape.circle,
                                             ),
                                             child: const Icon(Icons.check,
-                                                size: 10, color: Colors.white),
+                                                size: 11, color: Colors.white),
                                           ),
                                         ),
                                     ],

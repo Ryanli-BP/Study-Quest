@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import init_db, AsyncSessionLocal
-from app.routers import auth, upload, quiz, tokens, gacha
+from app.routers import auth, upload, quiz, tokens, gacha, lessons
 from app.services.gacha import seed_characters
 
 
@@ -39,6 +39,7 @@ app.include_router(upload.router)
 app.include_router(quiz.router)
 app.include_router(tokens.router)
 app.include_router(gacha.router)
+app.include_router(lessons.router)
 
 
 @app.get("/", tags=["health"])

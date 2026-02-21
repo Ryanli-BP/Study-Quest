@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../api/api_client.dart';
 import '../../providers/expedition_provider.dart';
 
@@ -25,8 +26,9 @@ class _CollectionScreenState extends State<CollectionScreen> {
       _collection = await ApiClient.getCollection();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       setState(() => _loading = false);
@@ -35,19 +37,27 @@ class _CollectionScreenState extends State<CollectionScreen> {
 
   Color _rarityColor(String rarity) {
     switch (rarity) {
-      case 'legendary': return const Color(0xFFFFD700);
-      case 'epic': return const Color(0xFFBF00FF);
-      case 'rare': return const Color(0xFF4169E1);
-      default: return const Color(0xFF808080);
+      case 'legendary':
+        return const Color(0xFFFFD700);
+      case 'epic':
+        return const Color(0xFFBF00FF);
+      case 'rare':
+        return const Color(0xFF4169E1);
+      default:
+        return const Color(0xFF808080);
     }
   }
 
   String _rarityEmoji(String rarity) {
     switch (rarity) {
-      case 'legendary': return '🌟';
-      case 'epic': return '💜';
-      case 'rare': return '💙';
-      default: return '⚪';
+      case 'legendary':
+        return '🌟';
+      case 'epic':
+        return '💜';
+      case 'rare':
+        return '💙';
+      default:
+        return '⚪';
     }
   }
 
@@ -55,7 +65,8 @@ class _CollectionScreenState extends State<CollectionScreen> {
   Widget build(BuildContext context) {
     if (_loading) {
       return const Center(
-          child: CircularProgressIndicator(color: Color(0xFF7B61FF)));
+        child: CircularProgressIndicator(color: Color(0xFF7B61FF)),
+      );
     }
 
     if (_collection.isEmpty) {
@@ -65,11 +76,15 @@ class _CollectionScreenState extends State<CollectionScreen> {
           children: [
             Text('🐾', style: TextStyle(fontSize: 56)),
             SizedBox(height: 16),
-            Text('No companions yet',
-                style: TextStyle(color: Colors.white, fontSize: 18)),
+            Text(
+              'No companions yet',
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
             SizedBox(height: 8),
-            Text('Pull from the gacha to get companions!',
-                style: TextStyle(color: Colors.white54)),
+            Text(
+              'Pull from the gacha to get companions!',
+              style: TextStyle(color: Colors.white54),
+            ),
           ],
         ),
       );
@@ -92,9 +107,10 @@ class _CollectionScreenState extends State<CollectionScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${unique.length} Companions Collected',
-                style: const TextStyle(
-                    color: Colors.white54, fontSize: 14)),
+            Text(
+              '${unique.length} Companions Collected',
+              style: const TextStyle(color: Colors.white54, fontSize: 14),
+            ),
             const SizedBox(height: 12),
             Expanded(
               child: GridView.builder(
@@ -122,60 +138,81 @@ class _CollectionScreenState extends State<CollectionScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(_rarityEmoji(rarity),
-                              style: const TextStyle(fontSize: 32)),
+                          Image(
+                            width: 48,
+                            height: 48,
+                            image: AssetImage(
+                              "assets/images/${char['name']}.png",
+                            ),
+                          ),
                           const SizedBox(height: 8),
-                          Text(char['name'] ?? '',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13)),
+                          Text(
+                            char['name'] ?? '',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
                           const SizedBox(height: 4),
-                          Text(rarity.toUpperCase(),
-                              style: TextStyle(color: color, fontSize: 10)),
+                          Text(
+                            rarity.toUpperCase(),
+                            style: TextStyle(color: color, fontSize: 10),
+                          ),
                           const SizedBox(height: 4),
                           // Level + XP bar
-                          Builder(builder: (ctx) {
-                            final prog = ctx
-                                .watch<ExpeditionProvider>()
-                                .progressFor(char['id'] as int);
-                            return Column(
-                              children: [
-                                Text('Lv.${prog.level}',
+                          Builder(
+                            builder: (ctx) {
+                              final prog = ctx
+                                  .watch<ExpeditionProvider>()
+                                  .progressFor(char['id'] as int);
+                              return Column(
+                                children: [
+                                  Text(
+                                    'Lv.${prog.level}',
                                     style: TextStyle(
-                                        color: color,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold)),
-                                const SizedBox(height: 2),
-                                SizedBox(
-                                  width: 60,
-                                  child: LinearProgressIndicator(
-                                    value: prog.xpFraction,
-                                    backgroundColor: Colors.white12,
-                                    valueColor:
-                                        AlwaysStoppedAnimation<Color>(color),
-                                    borderRadius: BorderRadius.circular(3),
-                                    minHeight: 4,
+                                      color: color,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            );
-                          }),
+                                  const SizedBox(height: 2),
+                                  SizedBox(
+                                    width: 60,
+                                    child: LinearProgressIndicator(
+                                      value: prog.xpFraction,
+                                      backgroundColor: Colors.white12,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        color,
+                                      ),
+                                      borderRadius: BorderRadius.circular(3),
+                                      minHeight: 4,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
                           if (count > 1) ...[
                             const SizedBox(height: 4),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2),
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.orange.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Text('x$count',
-                                  style: const TextStyle(
-                                      color: Colors.orange,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold)),
+                              child: Text(
+                                'x$count',
+                                style: const TextStyle(
+                                  color: Colors.orange,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ],
                         ],
@@ -195,52 +232,73 @@ class _CollectionScreenState extends State<CollectionScreen> {
     final rarity = char['rarity'] as String;
     Color color;
     switch (rarity) {
-      case 'legendary': color = const Color(0xFFFFD700); break;
-      case 'epic': color = const Color(0xFFBF00FF); break;
-      case 'rare': color = const Color(0xFF4169E1); break;
-      default: color = const Color(0xFF808080);
+      case 'legendary':
+        color = const Color(0xFFFFD700);
+        break;
+      case 'epic':
+        color = const Color(0xFFBF00FF);
+        break;
+      case 'rare':
+        color = const Color(0xFF4169E1);
+        break;
+      default:
+        color = const Color(0xFF808080);
     }
 
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF1A1A2E),
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(_rarityEmoji(rarity), style: const TextStyle(fontSize: 56)),
-            const SizedBox(height: 12),
-            Text(char['name'] ?? '',
-                style: TextStyle(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder:
+          (_) => Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image(image: AssetImage("assets/images/${char['name']}.png")),
+                const SizedBox(height: 12),
+                Text(
+                  char['name'] ?? '',
+                  style: TextStyle(
                     color: color,
                     fontSize: 24,
-                    fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            Text(rarity.toUpperCase(),
-                style: TextStyle(color: color.withOpacity(0.7), fontSize: 13)),
-            const SizedBox(height: 16),
-            Text(char['description'] ?? '',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70, height: 1.5)),
-            if (char['subject_affinity'] != null) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(20),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                child: Text('📚 Subject: ${char['subject_affinity']}',
-                    style: TextStyle(color: color)),
-              ),
-            ],
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
+                const SizedBox(height: 4),
+                Text(
+                  rarity.toUpperCase(),
+                  style: TextStyle(color: color.withOpacity(0.7), fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  char['description'] ?? '',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70, height: 1.5),
+                ),
+                if (char['subject_affinity'] != null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '📚 Subject: ${char['subject_affinity']}',
+                      style: TextStyle(color: color),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
     );
   }
 }

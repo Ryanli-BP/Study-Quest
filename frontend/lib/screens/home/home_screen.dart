@@ -1,11 +1,12 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:frontend/components/companion.dart';
 import 'package:provider/provider.dart';
+
 import '../../providers/auth_provider.dart';
-import '../study/study_screen.dart';
-import '../gacha/gacha_screen.dart';
 import '../gacha/collection_screen.dart';
+import '../gacha/gacha_screen.dart';
 import '../game/base_game_screen.dart';
+import '../study/study_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,8 +34,10 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF1A1A2E),
         elevation: 0,
-        title: const Text('StudyQuest',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'StudyQuest',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         actions: [
           // Token display
           Container(
@@ -49,9 +52,13 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 const Text('💎', style: TextStyle(fontSize: 16)),
                 const SizedBox(width: 6),
-                Text('${auth.tokens}',
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold)),
+                Text(
+                  '${auth.tokens}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
@@ -65,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
         fit: StackFit.expand,
         children: [
           _screens[_tab],
-          _TabCompanion(tabIndex: _tab),
+          Companion(imagePath: "brown_dog", text: _tabMessages[_tab]),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -75,25 +82,30 @@ class _HomeScreenState extends State<HomeScreen> {
         indicatorColor: const Color(0xFF7B61FF).withOpacity(0.3),
         destinations: const [
           NavigationDestination(
-              icon: Icon(Icons.home_outlined, color: Colors.white54),
-              selectedIcon: Icon(Icons.home, color: Color(0xFF7B61FF)),
-              label: 'Base'),
+            icon: Icon(Icons.home_outlined, color: Colors.white54),
+            selectedIcon: Icon(Icons.home, color: Color(0xFF7B61FF)),
+            label: 'Base',
+          ),
           NavigationDestination(
-              icon: Icon(Icons.book_outlined, color: Colors.white54),
-              selectedIcon: Icon(Icons.book, color: Color(0xFF7B61FF)),
-              label: 'Study'),
+            icon: Icon(Icons.book_outlined, color: Colors.white54),
+            selectedIcon: Icon(Icons.book, color: Color(0xFF7B61FF)),
+            label: 'Study',
+          ),
           NavigationDestination(
-              icon: Icon(Icons.casino_outlined, color: Colors.white54),
-              selectedIcon: Icon(Icons.casino, color: Color(0xFF7B61FF)),
-              label: 'Gacha'),
+            icon: Icon(Icons.casino_outlined, color: Colors.white54),
+            selectedIcon: Icon(Icons.casino, color: Color(0xFF7B61FF)),
+            label: 'Gacha',
+          ),
           NavigationDestination(
-              icon: Icon(Icons.pets_outlined, color: Colors.white54),
-              selectedIcon: Icon(Icons.pets, color: Color(0xFF7B61FF)),
-              label: 'Collection'),
+            icon: Icon(Icons.pets_outlined, color: Colors.white54),
+            selectedIcon: Icon(Icons.pets, color: Color(0xFF7B61FF)),
+            label: 'Collection',
+          ),
           NavigationDestination(
-              icon: Icon(Icons.landscape_outlined, color: Colors.white54),
-              selectedIcon: Icon(Icons.landscape, color: Color(0xFF7B61FF)),
-              label: 'Island'),
+            icon: Icon(Icons.landscape_outlined, color: Colors.white54),
+            selectedIcon: Icon(Icons.landscape, color: Color(0xFF7B61FF)),
+            label: 'Island',
+          ),
         ],
       ),
     );
@@ -105,118 +117,12 @@ class _HomeScreenState extends State<HomeScreen> {
 // ---------------------------------------------------------------------------
 
 const _tabMessages = [
-  "Welcome back, hero! 🏠",
+  "Welcome back! 🏠",
   "Let's get studying! 📖",
   "Ready to pull? ✨",
   "Check out your crew! 🐾",
   "Adventure awaits! 🗺️",
 ];
-
-class _TabCompanion extends StatefulWidget {
-  final int tabIndex;
-  const _TabCompanion({required this.tabIndex});
-
-  @override
-  State<_TabCompanion> createState() => _TabCompanionState();
-}
-
-class _TabCompanionState extends State<_TabCompanion>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _bob;
-
-  @override
-  void initState() {
-    super.initState();
-    _bob = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _bob.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final message = _tabMessages[widget.tabIndex];
-
-    return Positioned(
-      right: 16,
-      bottom: 16,
-      child: AnimatedBuilder(
-        animation: _bob,
-        builder: (context, child) {
-          final offset = sin(_bob.value * pi) * 5;
-          return Transform.translate(
-            offset: Offset(0, -offset),
-            child: child,
-          );
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Speech bubble
-            Container(
-              constraints: const BoxConstraints(maxWidth: 180),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1A1A2E),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(14),
-                  topRight: Radius.circular(14),
-                  bottomLeft: Radius.circular(14),
-                  bottomRight: Radius.circular(4),
-                ),
-                border: Border.all(color: const Color(0xFF7B61FF), width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF7B61FF).withOpacity(0.25),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Text(
-                message,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  height: 1.3,
-                ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            // Companion emoji
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1A1A2E),
-                shape: BoxShape.circle,
-                border: Border.all(
-                    color: const Color(0xFF7B61FF).withOpacity(0.6), width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF7B61FF).withOpacity(0.3),
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
-              child: const Center(
-                child: Text('🐉', style: TextStyle(fontSize: 30)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Base tab — shows companions + mock expedition
@@ -245,20 +151,30 @@ class _BaseTab extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Welcome back,',
-                    style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14)),
-                Text(auth.user?['username'] ?? '',
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold)),
+                Text(
+                  'Welcome back,',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  auth.user?['username'] ?? '',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     const Text('💎', style: TextStyle(fontSize: 18)),
                     const SizedBox(width: 6),
-                    Text('${auth.tokens} tokens',
-                        style: const TextStyle(color: Colors.white, fontSize: 16)),
+                    Text(
+                      '${auth.tokens} tokens',
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                    ),
                   ],
                 ),
               ],
@@ -289,11 +205,29 @@ class _BaseTab extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: _StatCard(label: 'Lessons\nCompleted', value: '7', icon: '📖')),
+              Expanded(
+                child: _StatCard(
+                  label: 'Lessons\nCompleted',
+                  value: '7',
+                  icon: '📖',
+                ),
+              ),
               const SizedBox(width: 12),
-              Expanded(child: _StatCard(label: 'Quizzes\nTaken', value: '3', icon: '✅')),
+              Expanded(
+                child: _StatCard(
+                  label: 'Quizzes\nTaken',
+                  value: '3',
+                  icon: '✅',
+                ),
+              ),
               const SizedBox(width: 12),
-              Expanded(child: _StatCard(label: 'Companions\nOwned', value: '4', icon: '🐾')),
+              Expanded(
+                child: _StatCard(
+                  label: 'Companions\nOwned',
+                  value: '4',
+                  icon: '🐾',
+                ),
+              ),
             ],
           ),
         ],
@@ -308,9 +242,14 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(title,
-        style: const TextStyle(
-            color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold));
+    return Text(
+      title,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+      ),
+    );
   }
 }
 
@@ -342,22 +281,29 @@ class _ExpeditionCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(name,
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold)),
-              Text('⏱ $timeLeft',
-                  style: const TextStyle(color: Colors.white54, fontSize: 13)),
+              Text(
+                name,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                '⏱ $timeLeft',
+                style: const TextStyle(color: Colors.white54, fontSize: 13),
+              ),
             ],
           ),
           const SizedBox(height: 8),
-          Text('👥 ${companions.join(', ')}',
-              style: const TextStyle(color: Colors.white54, fontSize: 13)),
+          Text(
+            '👥 ${companions.join(', ')}',
+            style: const TextStyle(color: Colors.white54, fontSize: 13),
+          ),
           const SizedBox(height: 10),
           LinearProgressIndicator(
             value: progress,
             backgroundColor: Colors.white12,
-            valueColor:
-                const AlwaysStoppedAnimation<Color>(Color(0xFF7B61FF)),
+            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF7B61FF)),
             borderRadius: BorderRadius.circular(4),
           ),
         ],
@@ -371,8 +317,11 @@ class _StatCard extends StatelessWidget {
   final String value;
   final String icon;
 
-  const _StatCard(
-      {required this.label, required this.value, required this.icon});
+  const _StatCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -387,15 +336,20 @@ class _StatCard extends StatelessWidget {
         children: [
           Text(icon, style: const TextStyle(fontSize: 24)),
           const SizedBox(height: 8),
-          Text(value,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white54, fontSize: 11)),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white54, fontSize: 11),
+          ),
         ],
       ),
     );

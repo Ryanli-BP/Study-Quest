@@ -205,6 +205,13 @@ class ExpeditionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> failExpedition(String expeditionId) async {
+    final exp = _expeditions.firstWhere((e) => e.id == expeditionId);
+    exp.claimed = true;
+    await _save();
+    notifyListeners();
+  }
+
   Future<Map<String, int>> claimRewards(String expeditionId) async {
     final exp = _expeditions.firstWhere((e) => e.id == expeditionId);
     exp.claimed = true;

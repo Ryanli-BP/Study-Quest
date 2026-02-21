@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../api/api_client.dart';
 import '../../providers/expedition_provider.dart';
 import 'expedition_map_screen.dart';
+import 'combat_screen.dart';
 
 // ---------------------------------------------------------------------------
 // Data models
@@ -587,15 +588,26 @@ class _ExpeditionCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => _claim(context),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => CombatScreen(
+                      expeditionId: expedition.id,
+                      location: expedition.location,
+                      companions: expedition.companions,
+                    ),
+                  ),
+                ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: Colors.red.shade700,
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8)),
                 ),
-                child: const Text('Claim Rewards! 🎉',
-                    style: TextStyle(color: Colors.white, fontSize: 11)),
+                child: const Text('⚔️ Enter Battle!',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -604,59 +616,4 @@ class _ExpeditionCard extends StatelessWidget {
     );
   }
 
-  Future<void> _claim(BuildContext context) async {
-    final rewards = await context
-        .read<ExpeditionProvider>()
-        .claimRewards(expedition.id);
-
-    if (context.mounted) {
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          backgroundColor: const Color(0xFF1A1A2E),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text('${expedition.location.emoji} Expedition Complete!',
-              style: const TextStyle(color: Colors.white)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _RewardRow('🪙 Coins', '${rewards['coins']}'),
-              _RewardRow('🪨 Materials', '${rewards['materials']}'),
-              _RewardRow('⭐ XP per companion', '${rewards['xp']}'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Nice!',
-                  style: TextStyle(color: Color(0xFF7B61FF))),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-}
-
-class _RewardRow extends StatelessWidget {
-  final String label;
-  final String value;
-  const _RewardRow(this.label, this.value);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(color: Colors.white70)),
-          Text(value,
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
 }

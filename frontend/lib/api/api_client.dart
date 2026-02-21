@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -27,17 +28,24 @@ class ApiClient {
   static bool get isLoggedIn => _token != null;
 
   static Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        if (_token != null) 'Authorization': 'Bearer $_token',
-      };
+    'Content-Type': 'application/json',
+    if (_token != null) 'Authorization': 'Bearer $_token',
+  };
 
   // Auth
   static Future<Map<String, dynamic>> register(
-      String username, String email, String password) async {
+    String username,
+    String email,
+    String password,
+  ) async {
     final res = await http.post(
       Uri.parse('$_baseUrl/auth/register'),
       headers: _headers,
-      body: jsonEncode({'username': username, 'email': email, 'password': password}),
+      body: jsonEncode({
+        'username': username,
+        'email': email,
+        'password': password,
+      }),
     );
     return _handle(res);
   }
@@ -54,46 +62,74 @@ class ApiClient {
   }
 
   static Future<Map<String, dynamic>> getMe() async {
-    final res = await http.get(Uri.parse('$_baseUrl/auth/me'), headers: _headers);
+    final res = await http.get(
+      Uri.parse('$_baseUrl/auth/me'),
+      headers: _headers,
+    );
     return _handle(res);
   }
 
   // Materials
   static Future<Map<String, dynamic>> uploadMaterial(
-      List<int> bytes, String filename, String mimeType) async {
-    final request = http.MultipartRequest('POST', Uri.parse('$_baseUrl/materials/upload'));
+    List<int> bytes,
+    String filename,
+    String mimeType,
+  ) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$_baseUrl/materials/upload'),
+    );
     request.headers['Authorization'] = 'Bearer $_token';
-    request.files.add(http.MultipartFile.fromBytes('file', bytes,
-        filename: filename));
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'file',
+        bytes,
+        filename: filename,
+        contentType: http.MediaType.parse(mimeType),
+      ),
+    );
     final streamed = await request.send();
     final res = await http.Response.fromStream(streamed);
     return _handle(res);
   }
 
   static Future<List<dynamic>> getMaterials() async {
-    final res = await http.get(Uri.parse('$_baseUrl/materials/'), headers: _headers);
+    final res = await http.get(
+      Uri.parse('$_baseUrl/materials/'),
+      headers: _headers,
+    );
     return _handleList(res);
   }
 
   static Future<Map<String, dynamic>> getSyllabus(int materialId) async {
     final res = await http.get(
-        Uri.parse('$_baseUrl/materials/$materialId/syllabus'), headers: _headers);
+      Uri.parse('$_baseUrl/materials/$materialId/syllabus'),
+      headers: _headers,
+    );
     return _handle(res);
   }
 
   // Quiz
   static Future<Map<String, dynamic>> generateAssessmentQuiz(
-      int syllabusId, int numQuestions) async {
+    int syllabusId,
+    int numQuestions,
+  ) async {
     final res = await http.post(
       Uri.parse('$_baseUrl/quiz/assessment/generate'),
       headers: _headers,
-      body: jsonEncode({'syllabus_id': syllabusId, 'num_questions': numQuestions}),
+      body: jsonEncode({
+        'syllabus_id': syllabusId,
+        'num_questions': numQuestions,
+      }),
     );
     return _handle(res);
   }
 
   static Future<Map<String, dynamic>> generateLessonQuiz(
-      int syllabusId, int topicNumber, int numQuestions) async {
+    int syllabusId,
+    int topicNumber,
+    int numQuestions,
+  ) async {
     final res = await http.post(
       Uri.parse('$_baseUrl/quiz/lesson/generate'),
       headers: _headers,
@@ -107,7 +143,9 @@ class ApiClient {
   }
 
   static Future<Map<String, dynamic>> submitQuiz(
-      int quizId, List<int> answers) async {
+    int quizId,
+    List<int> answers,
+  ) async {
     final res = await http.post(
       Uri.parse('$_baseUrl/quiz/$quizId/submit'),
       headers: _headers,
@@ -118,24 +156,33 @@ class ApiClient {
 
   // Tokens
   static Future<Map<String, dynamic>> getTokenBalance() async {
-    final res =
-        await http.get(Uri.parse('$_baseUrl/tokens/balance'), headers: _headers);
+    final res = await http.get(
+      Uri.parse('$_baseUrl/tokens/balance'),
+      headers: _headers,
+    );
     return _handle(res);
   }
 
   static Future<Map<String, dynamic>> completeLesson(
-      int syllabusId, int topicNumber) async {
+    int syllabusId,
+    int topicNumber,
+  ) async {
     final res = await http.post(
       Uri.parse('$_baseUrl/tokens/lesson/complete'),
       headers: _headers,
-      body: jsonEncode({'syllabus_id': syllabusId, 'topic_number': topicNumber}),
+      body: jsonEncode({
+        'syllabus_id': syllabusId,
+        'topic_number': topicNumber,
+      }),
     );
     return _handle(res);
   }
 
   // Lessons
   static Future<Map<String, dynamic>> getLesson(
-      int syllabusId, int topicNumber) async {
+    int syllabusId,
+    int topicNumber,
+  ) async {
     final res = await http.get(
       Uri.parse('$_baseUrl/lessons/$syllabusId/$topicNumber'),
       headers: _headers,
@@ -161,25 +208,33 @@ class ApiClient {
   // Gacha
   static Future<Map<String, dynamic>> singlePull() async {
     final res = await http.post(
-        Uri.parse('$_baseUrl/gacha/pull/single'), headers: _headers);
+      Uri.parse('$_baseUrl/gacha/pull/single'),
+      headers: _headers,
+    );
     return _handle(res);
   }
 
   static Future<Map<String, dynamic>> tenPull() async {
-    final res =
-        await http.post(Uri.parse('$_baseUrl/gacha/pull/ten'), headers: _headers);
+    final res = await http.post(
+      Uri.parse('$_baseUrl/gacha/pull/ten'),
+      headers: _headers,
+    );
     return _handle(res);
   }
 
   static Future<List<dynamic>> getCollection() async {
-    final res =
-        await http.get(Uri.parse('$_baseUrl/gacha/collection'), headers: _headers);
+    final res = await http.get(
+      Uri.parse('$_baseUrl/gacha/collection'),
+      headers: _headers,
+    );
     return _handleList(res);
   }
 
   static Future<List<dynamic>> getAllCharacters() async {
-    final res =
-        await http.get(Uri.parse('$_baseUrl/gacha/characters'), headers: _headers);
+    final res = await http.get(
+      Uri.parse('$_baseUrl/gacha/characters'),
+      headers: _headers,
+    );
     return _handleList(res);
   }
 

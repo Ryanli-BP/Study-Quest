@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../api/api_client.dart';
 import '../quiz/quiz_screen.dart';
+import 'lesson_screen.dart';
 
 class StudyScreen extends StatefulWidget {
   const StudyScreen({super.key});
@@ -397,6 +398,12 @@ class _SyllabusScreenState extends State<SyllabusScreen> {
               topic: topic,
               isDone: isDone,
               onComplete: isDone ? null : () => _completeTopic(topicNum),
+              onLearn: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => LessonScreen(
+                  syllabusId: _syllabus!['id'],
+                  topic: topic,
+                ),
+              )),
               onQuiz: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => QuizScreen(
                   syllabusId: _syllabus!['id'],
@@ -435,12 +442,14 @@ class _TopicCard extends StatefulWidget {
   final bool isDone;
   final VoidCallback? onComplete;
   final VoidCallback onQuiz;
+  final VoidCallback onLearn;
 
   const _TopicCard({
     required this.topic,
     required this.isDone,
     required this.onComplete,
     required this.onQuiz,
+    required this.onLearn,
   });
 
   @override
@@ -524,6 +533,24 @@ class _TopicCardState extends State<_TopicCard> {
                           ),
                         )),
                     const SizedBox(height: 16),
+                    // Learn button (full-width)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: widget.onLearn,
+                        icon: const Icon(Icons.auto_stories,
+                            color: Colors.white, size: 18),
+                        label: const Text('Learn this Topic',
+                            style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF7B61FF),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         if (widget.onComplete != null)

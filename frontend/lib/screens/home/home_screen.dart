@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
@@ -60,7 +61,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: _screens[_tab],
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          _screens[_tab],
+          _TabCompanion(tabIndex: _tab),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         backgroundColor: const Color(0xFF1A1A2E),
         selectedIndex: _tab,
@@ -88,6 +95,124 @@ class _HomeScreenState extends State<HomeScreen> {
               selectedIcon: Icon(Icons.landscape, color: Color(0xFF7B61FF)),
               label: 'Island'),
         ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Floating companion widget
+// ---------------------------------------------------------------------------
+
+const _tabMessages = [
+  "Welcome back, hero! 🏠",
+  "Let's get studying! 📖",
+  "Ready to pull? ✨",
+  "Check out your crew! 🐾",
+  "Adventure awaits! 🗺️",
+];
+
+class _TabCompanion extends StatefulWidget {
+  final int tabIndex;
+  const _TabCompanion({required this.tabIndex});
+
+  @override
+  State<_TabCompanion> createState() => _TabCompanionState();
+}
+
+class _TabCompanionState extends State<_TabCompanion>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _bob;
+
+  @override
+  void initState() {
+    super.initState();
+    _bob = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _bob.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final message = _tabMessages[widget.tabIndex];
+
+    return Positioned(
+      right: 16,
+      bottom: 16,
+      child: AnimatedBuilder(
+        animation: _bob,
+        builder: (context, child) {
+          final offset = sin(_bob.value * pi) * 5;
+          return Transform.translate(
+            offset: Offset(0, -offset),
+            child: child,
+          );
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Speech bubble
+            Container(
+              constraints: const BoxConstraints(maxWidth: 180),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A1A2E),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(14),
+                  topRight: Radius.circular(14),
+                  bottomLeft: Radius.circular(14),
+                  bottomRight: Radius.circular(4),
+                ),
+                border: Border.all(color: const Color(0xFF7B61FF), width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF7B61FF).withOpacity(0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  height: 1.3,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            // Companion emoji
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A1A2E),
+                shape: BoxShape.circle,
+                border: Border.all(
+                    color: const Color(0xFF7B61FF).withOpacity(0.6), width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF7B61FF).withOpacity(0.3),
+                    blurRadius: 10,
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Text('🐉', style: TextStyle(fontSize: 30)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -133,6 +133,31 @@ class ApiClient {
     return _handle(res);
   }
 
+  // Lessons
+  static Future<Map<String, dynamic>> getLesson(
+      int syllabusId, int topicNumber) async {
+    final res = await http.get(
+      Uri.parse('$_baseUrl/lessons/$syllabusId/$topicNumber'),
+      headers: _headers,
+    );
+    return _handle(res);
+  }
+
+  static Future<String> askQuestion(
+    int syllabusId,
+    int topicNumber,
+    String question,
+    List<Map<String, String>> history,
+  ) async {
+    final res = await http.post(
+      Uri.parse('$_baseUrl/lessons/$syllabusId/$topicNumber/ask'),
+      headers: _headers,
+      body: jsonEncode({'question': question, 'history': history}),
+    );
+    final data = _handle(res);
+    return data['answer'] as String;
+  }
+
   // Gacha
   static Future<Map<String, dynamic>> singlePull() async {
     final res = await http.post(

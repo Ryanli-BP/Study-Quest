@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../models/combat.dart';
 import '../../providers/expedition_provider.dart';
 
@@ -49,18 +51,26 @@ class _CombatScreenState extends State<CombatScreen>
   void initState() {
     super.initState();
     _bossShakeCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 350));
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
     _bossShakeAnim = _shakeSequence(_bossShakeCtrl);
 
     _bossFlashCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 300));
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
 
     _companionShakeCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 350));
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
     _companionShakeAnim = _shakeSequence(_companionShakeCtrl);
 
     _companionFlashCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 300));
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
 
     _initCombat();
   }
@@ -85,10 +95,11 @@ class _CombatScreenState extends State<CombatScreen>
   void _initCombat() {
     final expProvider = context.read<ExpeditionProvider>();
     _boss = bossToEntity(widget.location);
-    _companions = widget.companions.map((char) {
-      final level = expProvider.progressFor(char['id'] as int).level;
-      return companionToEntity(char, level);
-    }).toList();
+    _companions =
+        widget.companions.map((char) {
+          final level = expProvider.progressFor(char['id'] as int).level;
+          return companionToEntity(char, level);
+        }).toList();
     _allEntities = [_boss, ..._companions];
     _log.add('⚔️ Battle begins! Defeat ${_boss.name}!');
     _advanceToNextTurn();
@@ -109,10 +120,9 @@ class _CombatScreenState extends State<CombatScreen>
       for (final e in _allEntities) {
         if (e.isAlive) e.gauge += minTicks * e.spd;
       }
-      final ready = _allEntities
-          .where((e) => e.isAlive && e.gauge >= 100)
-          .toList()
-        ..sort((a, b) => b.gauge.compareTo(a.gauge));
+      final ready =
+          _allEntities.where((e) => e.isAlive && e.gauge >= 100).toList()
+            ..sort((a, b) => b.gauge.compareTo(a.gauge));
       if (ready.isNotEmpty) {
         _currentTurn = ready.first;
         ready.first.gauge -= 100;
@@ -154,7 +164,8 @@ class _CombatScreenState extends State<CombatScreen>
     _log.add('${_currentTurn.name} uses ${ability.emoji} ${ability.name}!');
 
     if (ability.damageMultiplier > 0) {
-      final dmg = (_currentTurn.effectiveAtk * ability.damageMultiplier).round();
+      final dmg =
+          (_currentTurn.effectiveAtk * ability.damageMultiplier).round();
       _boss.takeDamage(dmg);
       _bossShakeCtrl.forward(from: 0);
       _bossFlashCtrl.forward(from: 0);
@@ -167,34 +178,42 @@ class _CombatScreenState extends State<CombatScreen>
       _log.add('  Restored ${ability.healAllAmount} HP to all!');
     }
     if (ability.dotDamage > 0) {
-      _boss.statusEffects.add(StatusEffect(
-        label: '🔥 ${ability.dotDamage}/turn',
-        color: Colors.orange,
-        dotDamagePerTurn: ability.dotDamage,
-        turnsLeft: ability.dotDuration,
-      ));
+      _boss.statusEffects.add(
+        StatusEffect(
+          label: '🔥 ${ability.dotDamage}/turn',
+          color: Colors.orange,
+          dotDamagePerTurn: ability.dotDamage,
+          turnsLeft: ability.dotDuration,
+        ),
+      );
       _log.add('  ${_boss.name} burning ${ability.dotDamage}/turn!');
     }
     if (ability.atkBuffMultiplier > 0) {
       for (final c in _companions.where((c) => c.isAlive)) {
-        c.statusEffects.add(StatusEffect(
-          label: '+${(ability.atkBuffMultiplier * 100).round()}% ATK',
-          color: Colors.greenAccent,
-          isBuffOnCompanions: true,
-          atkMultiplierChange: ability.atkBuffMultiplier,
-          turnsLeft: ability.buffDuration,
-        ));
+        c.statusEffects.add(
+          StatusEffect(
+            label: '+${(ability.atkBuffMultiplier * 100).round()}% ATK',
+            color: Colors.greenAccent,
+            isBuffOnCompanions: true,
+            atkMultiplierChange: ability.atkBuffMultiplier,
+            turnsLeft: ability.buffDuration,
+          ),
+        );
       }
       _log.add('  Party ATK +${(ability.atkBuffMultiplier * 100).round()}%!');
     }
     if (ability.bossAtkDebuff > 0) {
-      _boss.statusEffects.add(StatusEffect(
-        label: '⬇ -${(ability.bossAtkDebuff * 100).round()}% ATK',
-        color: Colors.cyanAccent,
-        bossAtkReduction: ability.bossAtkDebuff,
-        turnsLeft: ability.debuffDuration,
-      ));
-      _log.add('  ${_boss.name} ATK -${(ability.bossAtkDebuff * 100).round()}%!');
+      _boss.statusEffects.add(
+        StatusEffect(
+          label: '⬇ -${(ability.bossAtkDebuff * 100).round()}% ATK',
+          color: Colors.cyanAccent,
+          bossAtkReduction: ability.bossAtkDebuff,
+          turnsLeft: ability.debuffDuration,
+        ),
+      );
+      _log.add(
+        '  ${_boss.name} ATK -${(ability.bossAtkDebuff * 100).round()}%!',
+      );
     }
     _checkAndContinue();
   }
@@ -268,10 +287,9 @@ class _CombatScreenState extends State<CombatScreen>
       for (final e in alive) {
         gauges[e.id] = gauges[e.id]! + minTicks * e.spd;
       }
-      final ready = alive
-          .where((e) => gauges[e.id]! >= 100)
-          .toList()
-        ..sort((a, b) => gauges[b.id]!.compareTo(gauges[a.id]!));
+      final ready =
+          alive.where((e) => gauges[e.id]! >= 100).toList()
+            ..sort((a, b) => gauges[b.id]!.compareTo(gauges[a.id]!));
       if (ready.isNotEmpty) {
         gauges[ready.first.id] = gauges[ready.first.id]! - 100;
         result.add(ready.first);
@@ -319,9 +337,8 @@ class _CombatScreenState extends State<CombatScreen>
           Expanded(
             child: _CompanionRow(
               companions: _companions,
-              currentTurnId: _phase == CombatPhase.playerTurn
-                  ? _currentTurn.id
-                  : null,
+              currentTurnId:
+                  _phase == CombatPhase.playerTurn ? _currentTurn.id : null,
               shakeAnim: _companionShakeAnim,
               flashCtrl: _companionFlashCtrl,
               shakingId: _shakingCompanionId,
@@ -370,9 +387,10 @@ class _BossSection extends StatelessWidget {
     return AnimatedBuilder(
       animation: Listenable.merge([shakeAnim, flashCtrl]),
       builder: (_, __) {
-        final flash = flashCtrl.value > 0.5
-            ? Colors.red.withOpacity(0.45)
-            : Colors.transparent;
+        final flash =
+            flashCtrl.value > 0.5
+                ? Colors.red.withOpacity(0.45)
+                : Colors.transparent;
         return Transform.translate(
           offset: Offset(shakeAnim.value, 0),
           child: Container(
@@ -381,69 +399,70 @@ class _BossSection extends StatelessWidget {
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
               border: Border(
-                  bottom: BorderSide(color: color.withOpacity(0.3), width: 1)),
+                bottom: BorderSide(color: color.withOpacity(0.3), width: 1),
+              ),
             ),
             child: Stack(
               children: [
-                if (flash != Colors.transparent)
-                  Positioned.fill(
-                    child: Container(color: flash),
-                  ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                Column(
                   children: [
-                    // Boss emoji — large
-                    Text(boss.emoji,
-                        style: const TextStyle(fontSize: 64)),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(boss.name,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 8),
-                          // HP bar
-                          Row(
-                            children: [
-                              Text(
-                                '${boss.currentHp} / ${boss.maxHp} HP',
-                                style: TextStyle(
-                                    color: color,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold),
+                    Text(
+                      boss.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // HP bar
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: LinearProgressIndicator(
+                            value: boss.hpFraction,
+                            backgroundColor: Colors.white12,
+                            valueColor: AlwaysStoppedAnimation<Color>(color),
+                            minHeight: 14,
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '${boss.currentHp} / ${boss.maxHp} HP',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: LinearProgressIndicator(
-                              value: boss.hpFraction,
-                              backgroundColor: Colors.white12,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(color),
-                              minHeight: 14,
-                            ),
-                          ),
-                          if (boss.statusEffects.isNotEmpty) ...[
-                            const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 6,
-                              runSpacing: 4,
-                              children: boss.statusEffects
-                                  .map((s) => _StatusChip(s))
-                                  .toList(),
                             ),
                           ],
-                        ],
-                      ),
+                        ),
+                      ],
+                    ),
+                    Image(
+                      image: AssetImage("assets/images/${boss.name}.png"),
+                      color:
+                          boss.currentHp == 0
+                              ? Colors.black.withOpacity(0.9)
+                              : Colors.white,
+                      colorBlendMode: BlendMode.color,
                     ),
                   ],
                 ),
+
+                if (boss.statusEffects.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children:
+                        boss.statusEffects.map((s) => _StatusChip(s)).toList(),
+                  ),
+                ],
               ],
             ),
           ),
@@ -475,17 +494,15 @@ class _TurnQueue extends StatelessWidget {
           final isCurrent = i == 0;
           return Container(
             margin: const EdgeInsets.only(right: 6),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
             decoration: BoxDecoration(
-              color: isCurrent
-                  ? const Color(0xFF7B61FF).withOpacity(0.3)
-                  : Colors.white.withOpacity(0.05),
+              color:
+                  isCurrent
+                      ? const Color(0xFF7B61FF).withOpacity(0.3)
+                      : Colors.white.withOpacity(0.05),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isCurrent
-                    ? const Color(0xFF7B61FF)
-                    : Colors.white12,
+                color: isCurrent ? const Color(0xFF7B61FF) : Colors.white12,
               ),
             ),
             child: Row(
@@ -493,13 +510,14 @@ class _TurnQueue extends StatelessWidget {
               children: [
                 Text(e.emoji, style: const TextStyle(fontSize: 14)),
                 const SizedBox(width: 4),
-                Text(e.name,
-                    style: TextStyle(
-                        color: isCurrent ? Colors.white : Colors.white54,
-                        fontSize: 11,
-                        fontWeight: isCurrent
-                            ? FontWeight.bold
-                            : FontWeight.normal)),
+                Text(
+                  e.name,
+                  style: TextStyle(
+                    color: isCurrent ? Colors.white : Colors.white54,
+                    fontSize: 11,
+                    fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
               ],
             ),
           );
@@ -533,20 +551,23 @@ class _CompanionRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Row(
-        children: companions
-            .map((c) => Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 5),
-                    child: _CompanionCard(
-                      companion: c,
-                      isActive: c.id == currentTurnId,
-                      shakeAnim: shakeAnim,
-                      flashCtrl: flashCtrl,
-                      isShaking: c.id == shakingId,
+        children:
+            companions
+                .map(
+                  (c) => Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                      child: _CompanionCard(
+                        companion: c,
+                        isActive: c.id == currentTurnId,
+                        shakeAnim: shakeAnim,
+                        flashCtrl: flashCtrl,
+                        isShaking: c.id == shakingId,
+                      ),
                     ),
                   ),
-                ))
-            .toList(),
+                )
+                .toList(),
       ),
     );
   }
@@ -572,9 +593,10 @@ class _CompanionCard extends StatelessWidget {
     return AnimatedBuilder(
       animation: Listenable.merge([shakeAnim, flashCtrl]),
       builder: (_, __) {
-        final flash = isShaking && flashCtrl.value > 0.5
-            ? Colors.red.withOpacity(0.5)
-            : Colors.transparent;
+        final flash =
+            isShaking && flashCtrl.value > 0.5
+                ? Colors.red.withOpacity(0.5)
+                : Colors.transparent;
         final shakeOffset = isShaking ? shakeAnim.value : 0.0;
 
         return Transform.translate(
@@ -584,26 +606,26 @@ class _CompanionCard extends StatelessWidget {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
               decoration: BoxDecoration(
-                color: flash != Colors.transparent
-                    ? flash
-                    : isActive
+                color:
+                    flash != Colors.transparent
+                        ? flash
+                        : isActive
                         ? const Color(0xFF7B61FF).withOpacity(0.18)
                         : const Color(0xFF1A1A2E),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: isActive
-                      ? const Color(0xFF7B61FF)
-                      : Colors.white12,
+                  color: isActive ? const Color(0xFF7B61FF) : Colors.white12,
                   width: isActive ? 2 : 1,
                 ),
-                boxShadow: isActive
-                    ? [
-                        BoxShadow(
-                            color:
-                                const Color(0xFF7B61FF).withOpacity(0.35),
-                            blurRadius: 12)
-                      ]
-                    : null,
+                boxShadow:
+                    isActive
+                        ? [
+                          BoxShadow(
+                            color: const Color(0xFF7B61FF).withOpacity(0.35),
+                            blurRadius: 12,
+                          ),
+                        ]
+                        : null,
               ),
               padding: const EdgeInsets.all(8),
               child: Column(
@@ -613,17 +635,18 @@ class _CompanionCard extends StatelessWidget {
                   SizedBox(
                     width: 50,
                     height: 50,
-                    child: companion.isAlive
-                        ? Image.asset(
-                            'assets/images/${companion.name}.png',
-                            fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) => Text(
-                              companion.emoji,
-                              style: const TextStyle(fontSize: 30),
-                            ),
-                          )
-                        : const Text('💀',
-                            style: TextStyle(fontSize: 30)),
+                    child:
+                        companion.isAlive
+                            ? Image.asset(
+                              'assets/images/${companion.name}.png',
+                              fit: BoxFit.contain,
+                              errorBuilder:
+                                  (_, __, ___) => Text(
+                                    companion.emoji,
+                                    style: const TextStyle(fontSize: 30),
+                                  ),
+                            )
+                            : const Text('💀', style: TextStyle(fontSize: 30)),
                   ),
                   const SizedBox(height: 6),
                   // Name
@@ -631,37 +654,70 @@ class _CompanionCard extends StatelessWidget {
                     companion.name,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold),
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
                   // Stats
-                  _StatRow('❤️', '${companion.currentHp}/${companion.maxHp}'),
-                  const SizedBox(height: 2),
-                  _StatRow('⚔️', '${companion.effectiveAtk} ATK'),
-                  const SizedBox(height: 2),
-                  _StatRow('💧', '${companion.currentMana}/${companion.maxMana} MP'),
-                  const SizedBox(height: 8),
-                  // HP bar
-                  _MiniBar(
-                    value: companion.hpFraction,
-                    color: companion.hpFraction > 0.5
-                        ? Colors.green
-                        : companion.hpFraction > 0.25
-                            ? Colors.orange
-                            : Colors.red,
-                    label: 'HP',
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // HP bar
+                        _MiniBar(
+                          value: companion.hpFraction,
+                          color:
+                              companion.hpFraction > 0.5
+                                  ? Colors.green
+                                  : companion.hpFraction > 0.25
+                                  ? Colors.orange
+                                  : Colors.red,
+                          label: 'HP',
+                        ),
+                        Text(
+                          '${companion.currentHp}/${companion.maxHp}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color:
+                                companion.hpFraction > 0.5
+                                    ? Colors.black
+                                    : Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 4),
-                  // Mana bar
-                  _MiniBar(
-                    value: companion.manaFraction,
-                    color: const Color(0xFF29B6F6),
-                    label: 'MP',
+
+                  const SizedBox(height: 2),
+                  const SizedBox(height: 2),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Mana bar
+                        _MiniBar(
+                          value: companion.manaFraction,
+                          color: const Color(0xFF29B6F6),
+                          label: 'MP',
+                        ),
+                        Text(
+                          '${companion.currentMana}/${companion.maxMana}',
+                          style: TextStyle(fontSize: 12, color: Colors.white),
+                        ),
+                        const SizedBox(height: 8),
+
+                        const SizedBox(height: 4),
+                      ],
+                    ),
                   ),
+
                   // Status effects
                   if (companion.statusEffects.isNotEmpty) ...[
                     const SizedBox(height: 6),
@@ -669,9 +725,10 @@ class _CompanionCard extends StatelessWidget {
                       spacing: 3,
                       runSpacing: 2,
                       alignment: WrapAlignment.center,
-                      children: companion.statusEffects
-                          .map((s) => _StatusChip(s))
-                          .toList(),
+                      children:
+                          companion.statusEffects
+                              .map((s) => _StatusChip(s))
+                              .toList(),
                     ),
                   ],
                 ],
@@ -687,7 +744,8 @@ class _CompanionCard extends StatelessWidget {
 class _StatRow extends StatelessWidget {
   final String icon;
   final String value;
-  const _StatRow(this.icon, this.value);
+  final Color textColor;
+  const _StatRow(this.icon, this.value, this.textColor);
 
   @override
   Widget build(BuildContext context) {
@@ -696,8 +754,7 @@ class _StatRow extends StatelessWidget {
       children: [
         Text(icon, style: const TextStyle(fontSize: 11)),
         const SizedBox(width: 4),
-        Text(value,
-            style: const TextStyle(color: Colors.white70, fontSize: 11)),
+        Text(value, style: TextStyle(color: textColor, fontSize: 11)),
       ],
     );
   }
@@ -707,15 +764,20 @@ class _MiniBar extends StatelessWidget {
   final double value;
   final Color color;
   final String label;
-  const _MiniBar(
-      {required this.value, required this.color, required this.label});
+  const _MiniBar({
+    required this.value,
+    required this.color,
+    required this.label,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(label,
-            style: const TextStyle(color: Colors.white38, fontSize: 9)),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white38, fontSize: 12),
+        ),
         const SizedBox(width: 4),
         Expanded(
           child: ClipRRect(
@@ -724,7 +786,7 @@ class _MiniBar extends StatelessWidget {
               value: value,
               backgroundColor: Colors.white12,
               valueColor: AlwaysStoppedAnimation<Color>(color),
-              minHeight: 5,
+              minHeight: 12,
             ),
           ),
         ),
@@ -749,21 +811,25 @@ class _CombatLog extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: recent
-            .asMap()
-            .entries
-            .map((e) => Text(
-                  e.value,
-                  style: TextStyle(
-                    color: e.key == recent.length - 1
-                        ? Colors.white
-                        : Colors.white38,
-                    fontSize: 11,
+        children:
+            recent
+                .asMap()
+                .entries
+                .map(
+                  (e) => Text(
+                    e.value,
+                    style: TextStyle(
+                      color:
+                          e.key == recent.length - 1
+                              ? Colors.white
+                              : Colors.white38,
+                      fontSize: 11,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ))
-            .toList(),
+                )
+                .toList(),
       ),
     );
   }
@@ -795,7 +861,10 @@ class _ActionPanel extends StatelessWidget {
     switch (phase) {
       case CombatPhase.playerTurn:
         return _PlayerActions(
-            entity: currentTurn!, onAttack: onAttack, onAbility: onAbility);
+          entity: currentTurn!,
+          onAttack: onAttack,
+          onAbility: onAbility,
+        );
       case CombatPhase.bossAction:
         return _BossActionPanel(bossName: boss.name);
       case CombatPhase.won:
@@ -811,8 +880,11 @@ class _PlayerActions extends StatelessWidget {
   final VoidCallback onAttack;
   final VoidCallback onAbility;
 
-  const _PlayerActions(
-      {required this.entity, required this.onAttack, required this.onAbility});
+  const _PlayerActions({
+    required this.entity,
+    required this.onAttack,
+    required this.onAbility,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -825,18 +897,22 @@ class _PlayerActions extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text("${entity.emoji} ${entity.name}'s turn",
-              style: const TextStyle(
-                  color: Color(0xFF7B61FF),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13)),
+          Text(
+            "${entity.emoji} ${entity.name}'s turn",
+            style: const TextStyle(
+              color: Color(0xFF7B61FF),
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
           const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
                 child: _ActionBtn(
                   label: '⚔️ Attack',
-                  subtitle: '${entity.effectiveAtk} dmg  (+${manaPerAttack} MP)',
+                  subtitle:
+                      '${entity.effectiveAtk} dmg  (+${manaPerAttack} MP)',
                   color: Colors.blueGrey,
                   onTap: onAttack,
                   enabled: true,
@@ -847,7 +923,8 @@ class _PlayerActions extends StatelessWidget {
                 Expanded(
                   child: _ActionBtn(
                     label: '${ability.emoji} ${ability.name}',
-                    subtitle: '${ability.description}  (${ability.manaCost} MP)',
+                    subtitle:
+                        '${ability.description}  (${ability.manaCost} MP)',
                     color: const Color(0xFF7B61FF),
                     onTap: canUse ? onAbility : () {},
                     enabled: canUse,
@@ -893,15 +970,20 @@ class _ActionBtn extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13)),
-              Text(subtitle,
-                  style: const TextStyle(color: Colors.white54, fontSize: 10),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: const TextStyle(color: Colors.white54, fontSize: 10),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           ),
         ),
@@ -923,17 +1005,23 @@ class _BossActionPanel extends StatelessWidget {
         children: [
           const Text('💀', style: TextStyle(fontSize: 24)),
           const SizedBox(width: 12),
-          Text('$bossName is acting...',
-              style: const TextStyle(
-                  color: Colors.redAccent,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15)),
+          Text(
+            '$bossName is acting...',
+            style: const TextStyle(
+              color: Colors.redAccent,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
           const Spacer(),
           const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                  strokeWidth: 2, color: Colors.redAccent)),
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.redAccent,
+            ),
+          ),
         ],
       ),
     );
@@ -953,42 +1041,50 @@ class _WonPanelState extends State<_WonPanel> {
 
   Future<void> _claim() async {
     setState(() => _claiming = true);
-    final rewards = await context
-        .read<ExpeditionProvider>()
-        .claimRewards(widget.expeditionId);
+    final rewards = await context.read<ExpeditionProvider>().claimRewards(
+      widget.expeditionId,
+    );
     if (!mounted) return;
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('🎉 Victory!',
-            style: TextStyle(color: Colors.white, fontSize: 22)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Rewards collected:',
-                style: TextStyle(color: Colors.white54)),
-            const SizedBox(height: 12),
-            _RewardRow('🪙 Coins', '${rewards['coins']}'),
-            _RewardRow('🪨 Materials', '${rewards['materials']}'),
-            _RewardRow('⭐ XP per companion', '${rewards['xp']}'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context)
-                ..pop()
-                ..pop();
-            },
-            child: const Text('Back to Island',
-                style: TextStyle(color: Color(0xFF7B61FF))),
+      builder:
+          (_) => AlertDialog(
+            backgroundColor: const Color(0xFF1A1A2E),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text(
+              '🎉 Victory!',
+              style: TextStyle(color: Colors.white, fontSize: 22),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Rewards collected:',
+                  style: TextStyle(color: Colors.white54),
+                ),
+                const SizedBox(height: 12),
+                _RewardRow('🪙 Coins', '${rewards['coins']}'),
+                _RewardRow('🪨 Materials', '${rewards['materials']}'),
+                _RewardRow('⭐ XP per companion', '${rewards['xp']}'),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context)
+                    ..pop()
+                    ..pop();
+                },
+                child: const Text(
+                  'Back to Island',
+                  style: TextStyle(color: Color(0xFF7B61FF)),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -1005,15 +1101,20 @@ class _WonPanelState extends State<_WonPanel> {
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
-          child: _claiming
-              ? const CircularProgressIndicator(color: Colors.white)
-              : const Text('🎉 Claim Victory Rewards',
-                  style: TextStyle(
+          child:
+              _claiming
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text(
+                    '🎉 Claim Victory Rewards',
+                    style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: 16)),
+                      fontSize: 16,
+                    ),
+                  ),
         ),
       ),
     );
@@ -1036,13 +1137,17 @@ class _LostPanel extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.red.shade900,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
-          child: const Text('💀 Expedition Failed — Return',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15)),
+          child: const Text(
+            '💀 Expedition Failed — Return',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
         ),
       ),
     );
@@ -1066,8 +1171,10 @@ class _StatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: effect.color.withOpacity(0.5)),
       ),
-      child: Text('${effect.label} ${effect.turnsLeft}t',
-          style: TextStyle(color: effect.color, fontSize: 10)),
+      child: Text(
+        '${effect.label} ${effect.turnsLeft}t',
+        style: TextStyle(color: effect.color, fontSize: 10),
+      ),
     );
   }
 }
@@ -1085,9 +1192,13 @@ class _RewardRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: Colors.white70)),
-          Text(value,
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );

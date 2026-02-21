@@ -23,7 +23,7 @@ class BuildingDef {
   final bool hasFunction;
   final String functionLabel;
   final List<String> levelPerks; // index 0 = lv1 perk, etc.
-  final List<int> upgradeCosts;  // cost to go lv1→2, 2→3, 3→4, 4→5
+  final List<int> upgradeCosts; // cost to go lv1→2, 2→3, 3→4, 4→5
   final int maxLevel;
 
   const BuildingDef({
@@ -49,7 +49,10 @@ const List<BuildingDef> buildings = [
     name: 'Town Hall',
     emoji: '🏰',
     color: Color(0xFF8B5E3C),
-    x: 365, y: 265, w: 170, h: 135,
+    x: 365,
+    y: 265,
+    w: 170,
+    h: 135,
     hasFunction: false,
     levelPerks: [
       'Lv1 — 4 companion slots · Level cap 10',
@@ -65,7 +68,10 @@ const List<BuildingDef> buildings = [
     name: 'Hospital',
     emoji: '🏥',
     color: Color(0xFF2E7D32),
-    x: 70, y: 175, w: 145, h: 115,
+    x: 70,
+    y: 175,
+    w: 145,
+    h: 115,
     hasFunction: true,
     functionLabel: 'Treat',
     levelPerks: [
@@ -82,7 +88,10 @@ const List<BuildingDef> buildings = [
     name: 'Blacksmith',
     emoji: '⚒️',
     color: Color(0xFF546E7A),
-    x: 685, y: 175, w: 145, h: 115,
+    x: 685,
+    y: 175,
+    w: 145,
+    h: 115,
     hasFunction: true,
     functionLabel: 'Forge',
     levelPerks: [
@@ -99,7 +108,10 @@ const List<BuildingDef> buildings = [
     name: 'Lab',
     emoji: '🔬',
     color: Color(0xFF6A1B9A),
-    x: 375, y: 475, w: 145, h: 110,
+    x: 375,
+    y: 475,
+    w: 145,
+    h: 110,
     hasFunction: true,
     functionLabel: 'Evolve',
     levelPerks: [
@@ -168,10 +180,11 @@ class _BaseGameScreenState extends State<BaseGameScreen> {
         unique[char['id'] as int] = char;
       }
       setState(() {
-        _companions = unique.values.map((char) {
-          final pos = _randomOpenPos();
-          return _CompanionState(character: char, x: pos.dx, y: pos.dy);
-        }).toList();
+        _companions =
+            unique.values.map((char) {
+              final pos = _randomOpenPos();
+              return _CompanionState(character: char, x: pos.dx, y: pos.dy);
+            }).toList();
       });
     } catch (_) {
     } finally {
@@ -180,9 +193,9 @@ class _BaseGameScreenState extends State<BaseGameScreen> {
   }
 
   Offset _randomOpenPos() => Offset(
-        80 + _rng.nextDouble() * (_canvasW - 160),
-        80 + _rng.nextDouble() * (_canvasH - 160),
-      );
+    80 + _rng.nextDouble() * (_canvasW - 160),
+    80 + _rng.nextDouble() * (_canvasH - 160),
+  );
 
   void _scatter() {
     for (final c in _companions) {
@@ -194,10 +207,14 @@ class _BaseGameScreenState extends State<BaseGameScreen> {
 
   Color _rarityColor(String rarity) {
     switch (rarity) {
-      case 'legendary': return const Color(0xFFFFD700);
-      case 'epic':      return const Color(0xFFBF00FF);
-      case 'rare':      return const Color(0xFF4169E1);
-      default:          return const Color(0xFF9E9E9E);
+      case 'legendary':
+        return const Color(0xFFFFD700);
+      case 'epic':
+        return const Color(0xFFBF00FF);
+      case 'rare':
+        return const Color(0xFF4169E1);
+      default:
+        return const Color(0xFF9E9E9E);
     }
   }
 
@@ -209,16 +226,31 @@ class _BaseGameScreenState extends State<BaseGameScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const ExpeditionMapScreen()),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10.0),
+        child: SizedBox(
+          width: double.infinity,
+          child: FloatingActionButton.extended(
+            onPressed:
+                () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const ExpeditionMapScreen(),
+                  ),
+                ),
+            backgroundColor: const Color(0xFF7B61FF),
+            icon: const Text('⚔️', style: TextStyle(fontSize: 22)),
+            label: const Text(
+              'New Expedition',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+          ),
         ),
-        backgroundColor: const Color(0xFF7B61FF),
-        icon: const Text('⚔️', style: TextStyle(fontSize: 18)),
-        label: const Text('New Expedition',
-            style:
-                TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -227,31 +259,40 @@ class _BaseGameScreenState extends State<BaseGameScreen> {
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
             child: Row(
               children: [
-                const Text('🏝️ Your Island',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold)),
+                const Text(
+                  '🏝️ Your Island',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const Spacer(),
                 // Materials counter
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 4),
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.brown.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                        color: Colors.brown.shade300.withOpacity(0.6)),
+                      color: Colors.brown.shade300.withOpacity(0.6),
+                    ),
                   ),
                   child: Row(
                     children: [
                       const Text('🪨', style: TextStyle(fontSize: 15)),
                       const SizedBox(width: 5),
-                      Text('$materials',
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14)),
+                      Text(
+                        '$materials',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -261,164 +302,244 @@ class _BaseGameScreenState extends State<BaseGameScreen> {
 
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Text('Tap a building to manage it',
-                style: TextStyle(color: Colors.white38, fontSize: 12)),
+            child: Text(
+              'Tap a building to manage it',
+              style: TextStyle(color: Colors.white38, fontSize: 12),
+            ),
           ),
           const SizedBox(height: 10),
 
           // Canvas + expedition overlay
           Expanded(
-            child: _loading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                        color: Color(0xFF7B61FF)))
-                : Stack(
-                    children: [
-                      // Island canvas
-                      InteractiveViewer(
-                        boundaryMargin: const EdgeInsets.all(100),
-                        minScale: 0.4,
-                        maxScale: 2.5,
-                        child: Center(
-                          child: SizedBox(
-                            width: _canvasW,
-                            height: _canvasH,
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                // Ground
-                                Container(
-                                  width: _canvasW,
-                                  height: _canvasH,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF1B3A1B),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                        color: Colors.white12, width: 2),
-                                  ),
-                                ),
-                                CustomPaint(
-                                  size: const Size(_canvasW, _canvasH),
-                                  painter: _GridPainter(),
-                                ),
-                                CustomPaint(
-                                  size: const Size(_canvasW, _canvasH),
-                                  painter: _PathPainter(),
-                                ),
-                                // Buildings
-                                for (final b in buildings)
-                                  Positioned(
-                                    left: b.x,
-                                    top: b.y,
-                                    child: _BuildingWidget(
-                                      def: b,
-                                      level: provider.buildingLevel(b.id),
-                                      onTap: () => _openBuilding(b),
-                                    ),
-                                  ),
-                                // Companions
-                                for (final c in _companions)
-                                  AnimatedPositioned(
-                                    duration:
-                                        const Duration(milliseconds: 2500),
-                                    curve: Curves.easeInOut,
-                                    left: c.x - 18,
-                                    top: c.y - 18,
-                                    child: _CompanionDot(
-                                      name: c.character['name'] ?? '?',
-                                      color: _rarityColor(
-                                          c.character['rarity'] ?? 'common'),
-                                    ),
-                                  ),
-                                if (_companions.isEmpty)
-                                  Positioned.fill(
-                                    child: Center(
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 24, vertical: 16),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black54,
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: const Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text('🐾',
-                                                style: TextStyle(
-                                                    fontSize: 36)),
-                                            SizedBox(height: 8),
-                                            Text('No companions yet',
-                                                style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontWeight:
-                                                        FontWeight.bold)),
-                                            SizedBox(height: 4),
-                                            Text(
-                                              'Pull from Gacha to populate\nyour island!',
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                  color: Colors.white54,
-                                                  fontSize: 13),
+            child:
+                _loading
+                    ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF7B61FF),
+                      ),
+                    )
+                    : Stack(
+                      children: [
+                        // Island canvas
+                        InteractiveViewer(
+                          boundaryMargin: const EdgeInsets.all(100),
+                          minScale: 0.4,
+                          maxScale: 2.5,
+                          child: Center(
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                final w = min(_canvasW, constraints.maxWidth);
+                                final h =
+                                    w *
+                                    (_canvasH /
+                                        _canvasW); // keep aspect ratio if desired
+                                return SizedBox(
+                                  width: w,
+                                  height: h,
+                                  child: Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      // compute scale based on available width
+                                      // Ground
+                                      Builder(
+                                        builder: (ctx) {
+                                          final scale =
+                                              w / _BaseGameScreenState._canvasW;
+                                          return SizedBox(
+                                            width: w,
+                                            height: h,
+                                            child: Container(
+                                              width: w,
+                                              height: h,
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFF1B3A1B),
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      20 * scale,
+                                                    ),
+                                                border: Border.all(
+                                                  color: Colors.white12,
+                                                  width: 2 * scale,
+                                                ),
+                                              ),
                                             ),
-                                          ],
+                                          );
+                                        },
+                                      ),
+                                      CustomPaint(
+                                        size: Size(w, h),
+                                        painter: _GridPainter(),
+                                      ),
+                                      CustomPaint(
+                                        size: Size(w, h),
+                                        painter: _PathPainter(),
+                                      ),
+                                      // Buildings
+                                      for (final b in buildings)
+                                        Positioned(
+                                          left:
+                                              b.x *
+                                              (w /
+                                                  _BaseGameScreenState
+                                                      ._canvasW),
+                                          top:
+                                              b.y *
+                                              (w /
+                                                  _BaseGameScreenState
+                                                      ._canvasW),
+                                          child: _BuildingWidget(
+                                            def: b,
+                                            level: provider.buildingLevel(b.id),
+                                            onTap: () => _openBuilding(b),
+                                            scale:
+                                                w /
+                                                _BaseGameScreenState._canvasW,
+                                          ),
                                         ),
+                                      // Companions
+                                      for (final c in _companions)
+                                        AnimatedPositioned(
+                                          duration: const Duration(
+                                            milliseconds: 2500,
+                                          ),
+                                          curve: Curves.linear,
+                                          left:
+                                              c.x *
+                                                  (w /
+                                                      _BaseGameScreenState
+                                                          ._canvasW) -
+                                              18 *
+                                                  (w /
+                                                      _BaseGameScreenState
+                                                          ._canvasW),
+                                          top:
+                                              c.y *
+                                                  (w /
+                                                      _BaseGameScreenState
+                                                          ._canvasW) -
+                                              18 *
+                                                  (w /
+                                                      _BaseGameScreenState
+                                                          ._canvasW),
+                                          child: _CompanionDot(
+                                            name: c.character['name'] ?? '?',
+                                            color: _rarityColor(
+                                              c.character['rarity'] ?? 'common',
+                                            ),
+                                            scale:
+                                                w /
+                                                _BaseGameScreenState._canvasW,
+                                          ),
+                                        ),
+                                      if (_companions.isEmpty)
+                                        Positioned.fill(
+                                          child: Center(
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 24,
+                                                    vertical: 16,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.black54,
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: const Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    '🐾',
+                                                    style: TextStyle(
+                                                      fontSize: 36,
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 8),
+                                                  Text(
+                                                    'No companions yet',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 4),
+                                                  Text(
+                                                    'Pull from Gacha to populate\nyour island!',
+                                                    textAlign: TextAlign.center,
+                                                    style: TextStyle(
+                                                      color: Colors.white54,
+                                                      fontSize: 13,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+
+                        // Expedition overlay
+                        if (expeditions.isNotEmpty)
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    const Color(0xFF0D0D1A).withOpacity(0.92),
+                                  ],
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Padding(
+                                    padding: EdgeInsets.fromLTRB(16, 10, 16, 6),
+                                    child: Text(
+                                      'Active Expeditions',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
                                       ),
                                     ),
                                   ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Expedition overlay
-                      if (expeditions.isNotEmpty)
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.transparent,
-                                  const Color(0xFF0D0D1A).withOpacity(0.92),
+                                  SizedBox(
+                                    height: 140,
+                                    child: ListView.builder(
+                                      padding: const EdgeInsets.fromLTRB(
+                                        12,
+                                        0,
+                                        12,
+                                        12,
+                                      ),
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: expeditions.length,
+                                      itemBuilder:
+                                          (context, i) => _ExpeditionCard(
+                                            expedition: expeditions[i],
+                                          ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Padding(
-                                  padding: EdgeInsets.fromLTRB(16, 10, 16, 6),
-                                  child: Text('Active Expeditions',
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14)),
-                                ),
-                                SizedBox(
-                                  height: 140,
-                                  child: ListView.builder(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        12, 0, 12, 12),
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: expeditions.length,
-                                    itemBuilder: (context, i) =>
-                                        _ExpeditionCard(
-                                            expedition: expeditions[i]),
-                                  ),
-                                ),
-                              ],
-                            ),
                           ),
-                        ),
-                    ],
-                  ),
+                      ],
+                    ),
           ),
           const SizedBox(height: 80), // FAB clearance
         ],
@@ -444,61 +565,78 @@ class _BuildingWidget extends StatelessWidget {
   final BuildingDef def;
   final int level;
   final VoidCallback onTap;
+  final double scale;
 
-  const _BuildingWidget(
-      {required this.def, required this.level, required this.onTap});
+  const _BuildingWidget({
+    required this.def,
+    required this.level,
+    required this.onTap,
+    this.scale = 1.0,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: def.w,
-        height: def.h,
+        width: def.w * scale,
+        height: def.h * scale,
         decoration: BoxDecoration(
           color: def.color.withOpacity(0.85),
-          borderRadius: BorderRadius.circular(10),
-          border:
-              Border.all(color: def.color.withOpacity(0.5), width: 2),
+          borderRadius: BorderRadius.circular(10 * scale),
+          border: Border.all(
+            color: def.color.withOpacity(0.5),
+            width: 2 * scale,
+          ),
           boxShadow: [
             BoxShadow(
-                color: def.color.withOpacity(0.4),
-                blurRadius: 8,
-                offset: const Offset(0, 4)),
+              color: def.color.withOpacity(0.4),
+              blurRadius: 8 * scale,
+              offset: Offset(0, 4 * scale),
+            ),
           ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(def.emoji,
-                style:
-                    TextStyle(fontSize: def.w > 155 ? 36 : 28)),
-            const SizedBox(height: 4),
-            Text(def.name,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11,
-                  shadows: [
-                    Shadow(color: Colors.black54, blurRadius: 4)
-                  ],
-                )),
-            const SizedBox(height: 2),
+            Text(
+              def.emoji,
+              style: TextStyle(
+                fontSize: (def.w * scale) > 155 ? 36 * scale : 28 * scale,
+              ),
+            ),
+            SizedBox(height: 4 * scale),
+            Text(
+              def.name,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 11 * scale,
+                shadows: [Shadow(color: Colors.black54, blurRadius: 4 * scale)],
+              ),
+            ),
+            SizedBox(height: 2 * scale),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+              padding: EdgeInsets.symmetric(
+                horizontal: 8 * scale,
+                vertical: 1 * scale,
+              ),
               decoration: BoxDecoration(
                 color: Colors.black38,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(8 * scale),
               ),
-              child: Text('Lv.$level',
-                  style: TextStyle(
-                      color: def.color == const Color(0xFF8B5E3C)
+              child: Text(
+                'Lv.$level',
+                style: TextStyle(
+                  color:
+                      def.color == const Color(0xFF8B5E3C)
                           ? Colors.orange.shade200
                           : Colors.white70,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold)),
+                  fontSize: 10 * scale,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
@@ -514,7 +652,12 @@ class _BuildingWidget extends StatelessWidget {
 class _CompanionDot extends StatelessWidget {
   final String name;
   final Color color;
-  const _CompanionDot({required this.name, required this.color});
+  final double scale;
+  const _CompanionDot({
+    required this.name,
+    required this.color,
+    this.scale = 1.0,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -524,18 +667,20 @@ class _CompanionDot extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Image(
-            width: 48,
-            height: 48,
+            width: 48 * scale,
+            height: 48 * scale,
             image: AssetImage('assets/images/$name.png'),
           ),
-          const SizedBox(height: 2),
-          Text(name,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 9,
-                fontWeight: FontWeight.bold,
-                shadows: [Shadow(color: Colors.black, blurRadius: 4)],
-              )),
+          SizedBox(height: 2 * scale),
+          Text(
+            name,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 9 * scale,
+              fontWeight: FontWeight.bold,
+              shadows: [Shadow(color: Colors.black, blurRadius: 4 * scale)],
+            ),
+          ),
         ],
       ),
     );
@@ -549,10 +694,12 @@ class _CompanionDot extends StatelessWidget {
 class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.04)
-      ..strokeWidth = 1;
-    const step = 60.0;
+    final scale = size.width / _BaseGameScreenState._canvasW;
+    final paint =
+        Paint()
+          ..color = Colors.white.withOpacity(0.04)
+          ..strokeWidth = 1.0 * scale;
+    final step = 60.0 * scale;
     for (double x = 0; x < size.width; x += step) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
     }
@@ -568,19 +715,37 @@ class _GridPainter extends CustomPainter {
 class _PathPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.brown.withOpacity(0.25)
-      ..strokeWidth = 18
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
+    final scale = size.width / _BaseGameScreenState._canvasW;
+    final paint =
+        Paint()
+          ..color = Colors.brown.withOpacity(0.25)
+          ..strokeWidth = 18 * scale
+          ..strokeCap = StrokeCap.round
+          ..style = PaintingStyle.stroke;
 
-    final path = Path()
-      ..moveTo(142, 232)  // Hospital → Town Hall
-      ..quadraticBezierTo(260, 260, 365, 330)
-      ..moveTo(758, 232)  // Blacksmith → Town Hall
-      ..quadraticBezierTo(640, 260, 535, 330)
-      ..moveTo(447, 475)  // Lab → Town Hall
-      ..quadraticBezierTo(447, 420, 447, 395);
+    final path =
+        Path()
+          ..moveTo(142 * scale, 232 * scale) // Hospital → Town Hall
+          ..quadraticBezierTo(
+            260 * scale,
+            260 * scale,
+            365 * scale,
+            330 * scale,
+          )
+          ..moveTo(758 * scale, 232 * scale) // Blacksmith → Town Hall
+          ..quadraticBezierTo(
+            640 * scale,
+            260 * scale,
+            535 * scale,
+            330 * scale,
+          )
+          ..moveTo(447 * scale, 475 * scale) // Lab → Town Hall
+          ..quadraticBezierTo(
+            447 * scale,
+            420 * scale,
+            447 * scale,
+            395 * scale,
+          );
 
     canvas.drawPath(path, paint);
   }
@@ -610,9 +775,10 @@ class _ExpeditionCard extends StatelessWidget {
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: finished
-              ? Colors.greenAccent.withOpacity(0.6)
-              : loc.color.withOpacity(0.5),
+          color:
+              finished
+                  ? Colors.greenAccent.withOpacity(0.6)
+                  : loc.color.withOpacity(0.5),
           width: finished ? 2 : 1,
         ),
       ),
@@ -624,13 +790,16 @@ class _ExpeditionCard extends StatelessWidget {
               Text(loc.emoji, style: const TextStyle(fontSize: 18)),
               const SizedBox(width: 6),
               Expanded(
-                child: Text(loc.name,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
+                child: Text(
+                  loc.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
@@ -653,25 +822,29 @@ class _ExpeditionCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('⏱ ${expedition.remainingLabel}',
-                    style: const TextStyle(
-                        color: Colors.white54, fontSize: 10)),
+                Text(
+                  '⏱ ${expedition.remainingLabel}',
+                  style: const TextStyle(color: Colors.white54, fontSize: 10),
+                ),
                 GestureDetector(
-                  onTap: () => context
-                      .read<ExpeditionProvider>()
-                      .instantComplete(expedition.id),
+                  onTap:
+                      () => context.read<ExpeditionProvider>().instantComplete(
+                        expedition.id,
+                      ),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 2),
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.orange.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                          color: Colors.orange.withOpacity(0.5)),
+                      border: Border.all(color: Colors.orange.withOpacity(0.5)),
                     ),
-                    child: const Text('⚡ Instant',
-                        style: TextStyle(
-                            color: Colors.orange, fontSize: 10)),
+                    child: const Text(
+                      '⚡ Instant',
+                      style: TextStyle(color: Colors.orange, fontSize: 10),
+                    ),
                   ),
                 ),
               ],
@@ -680,26 +853,32 @@ class _ExpeditionCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => CombatScreen(
-                      expeditionId: expedition.id,
-                      location: expedition.location,
-                      companions: expedition.companions,
+                onPressed:
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder:
+                            (_) => CombatScreen(
+                              expeditionId: expedition.id,
+                              location: expedition.location,
+                              companions: expedition.companions,
+                            ),
+                      ),
                     ),
-                  ),
-                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red.shade700,
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
-                child: const Text('⚔️ Enter Battle!',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold)),
+                child: const Text(
+                  '⚔️ Enter Battle!',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ],

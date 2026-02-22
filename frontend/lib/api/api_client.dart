@@ -1,9 +1,28 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-const String _baseUrl = 'http://10.0.2.2:8000';
+// Optional compile-time override: flutter run --dart-define=API_BASE_URL="https://api.example"
+const String _envBaseUrl = String.fromEnvironment(
+  'API_BASE_URL',
+  defaultValue: '',
+);
+
+final String _baseUrl = _computeBaseUrl();
+
+String _computeBaseUrl() {
+  if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
+  // On web, use the page origin so relative API works in deployments.
+  if (kIsWeb) return Uri.base.origin;
+  try {
+    if (Platform.isAndroid) return 'http://10.0.2.2:8000'; // Android emulator
+    return 'http://localhost:8000'; // Chrome
+  } catch (_) {}
+  return 'http://localhost:8000';
+}
 
 class ApiClient {
   static String? _token;

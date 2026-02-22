@@ -58,8 +58,9 @@ class _GachaScreenState extends State<GachaScreen>
       _pullResults = null;
     });
     try {
-      final result =
-          isTen ? await ApiClient.tenPull() : await ApiClient.singlePull();
+      final result = isTen
+          ? await ApiClient.tenPull()
+          : await ApiClient.singlePull();
       await context.read<AuthProvider>().refreshUser();
       setState(() => _pullResults = result['pulls']);
       _controller.forward(from: 0);
@@ -216,19 +217,18 @@ class _GachaScreenState extends State<GachaScreen>
                                       borderRadius: BorderRadius.circular(14),
                                       border: Border.all(color: Colors.white12),
                                     ),
-                                    child:
-                                        _pullResults!.length == 1
-                                            ? _SinglePullResult(
-                                              pull: _pullResults![0],
-                                            )
-                                            : SizedBox(
-                                              width: 680,
-                                              height: 420,
-                                              child: _TenPullGrid(
-                                                pulls: _pullResults!,
-                                                cardsAnim: _cardsController,
-                                              ),
+                                    child: _pullResults!.length == 1
+                                        ? _SinglePullResult(
+                                            pull: _pullResults![0],
+                                          )
+                                        : SizedBox(
+                                            width: 680,
+                                            height: 420,
+                                            child: _TenPullGrid(
+                                              pulls: _pullResults!,
+                                              cardsAnim: _cardsController,
                                             ),
+                                          ),
                                   ),
                                   Positioned(
                                     right: 8,
@@ -294,17 +294,20 @@ class _PullButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          gradient:
-              highlight
-                  ? const LinearGradient(
-                    colors: [Color(0xFF4A3AFF), Color(0xFF7B61FF)],
-                  )
-                  : null,
           color: highlight ? null : const Color(0xFF1A1A2E),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: canAfford ? const Color(0xFF7B61FF) : Colors.white12,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: !highlight
+                  ? Colors.white.withOpacity(0.2)
+                  : Colors.transparent,
+              blurRadius: 12,
+              spreadRadius: 0,
+            ),
+          ],
         ),
         child: Column(
           children: [
@@ -484,11 +487,10 @@ class _TenPullGrid extends StatelessWidget {
   void _showCardDetail(BuildContext context, dynamic pull) {
     showDialog(
       context: context,
-      builder:
-          (_) => Dialog(
-            backgroundColor: Colors.transparent,
-            child: _SinglePullResult(pull: pull),
-          ),
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: _SinglePullResult(pull: pull),
+      ),
     );
   }
 }

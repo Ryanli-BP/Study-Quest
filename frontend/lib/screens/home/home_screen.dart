@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/api/api_client.dart';
 import 'package:frontend/components/companion.dart';
 import 'package:provider/provider.dart';
 
@@ -127,8 +128,28 @@ const _tabMessages = [
 // ---------------------------------------------------------------------------
 // Base tab — shows companions + mock expedition
 // ---------------------------------------------------------------------------
-class _BaseTab extends StatelessWidget {
+class _BaseTab extends StatefulWidget {
   const _BaseTab();
+
+  @override
+  State<_BaseTab> createState() => _BaseTabState();
+}
+
+class _BaseTabState extends State<_BaseTab> {
+  List<int>? _completedTopics;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future _load() async {
+    List<int> topics = await ApiClient.getAllCompletedTopics();
+    setState(() {
+      _completedTopics = topics;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -218,7 +239,7 @@ class _BaseTab extends StatelessWidget {
               Expanded(
                 child: _StatCard(
                   label: 'Lessons\nCompleted',
-                  value: '7',
+                  value: _completedTopics?.length.toString() ?? "Loading...",
                   icon: '📖',
                 ),
               ),

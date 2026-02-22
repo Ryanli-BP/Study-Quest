@@ -263,6 +263,15 @@ class ApiClient {
     final data = _handle(res);
     return List<int>.from(data['completed']);
   }
+
+  static Future<List<int>> getAllCompletedTopics() async {
+    final res = await http.get(
+      Uri.parse('$_baseUrl/lessons/completedTopics'),
+      headers: _headers,
+    );
+    final data = _handle(res);
+    return List<int>.from(data['completed']);
+  }
 }
 
 class ApiException implements Exception {

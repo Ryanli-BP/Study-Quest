@@ -108,9 +108,18 @@ class _StudyScreenState extends State<StudyScreen> {
                           ),
                           const SizedBox(height: 20),
                           // Upload button
-                          SizedBox(
+                          Container(
                             width: double.infinity,
                             height: 52,
+                            decoration: BoxDecoration(
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.white.withOpacity(0.4),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 0),
+                                ),
+                              ],
+                            ),
                             child: ElevatedButton.icon(
                               onPressed: _uploading ? null : _uploadFile,
                               icon: _uploading

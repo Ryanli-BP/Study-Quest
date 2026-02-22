@@ -71,6 +71,37 @@ async def _get_syllabus_and_topic(
 # ---------------------------------------------------------------------------
 
 
+@router.get("/completedTopics")
+async def is_lesson_completed(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(TokenTransaction).where(
+            TokenTransaction.transaction_type == "lesson_complete",
+            TokenTransaction.description.like(f"Lesson % of syllabus %"),
+            TokenTransaction.user_id == current_user.id,
+        )
+    )
+    rows = result.scalars().all()
+
+    # Extract topic numbers from descriptions like "Lesson 3 of syllabus 12"
+    import re
+
+    topic_nums = []
+    for t in rows:
+        if not t.description:
+            continue
+        m = re.search(r"Lesson\s+(\d+)\s+of\s+syllabus\s+\d+", t.description)
+        if m:
+            try:
+                topic_nums.append(int(m.group(1)))
+            except ValueError:
+                continue
+
+    return {"completed": topic_nums}
+
+
 @router.get("/{syllabus_id}/completedTopics")
 async def is_lesson_completed(
     syllabus_id: int,

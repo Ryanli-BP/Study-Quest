@@ -45,10 +45,9 @@ class _StudyScreenState extends State<StudyScreen> {
     if (result == null || result.files.single.bytes == null) return;
 
     final file = result.files.single;
-    final mimeType =
-        file.extension == 'pdf'
-            ? 'application/pdf'
-            : 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+    final mimeType = file.extension == 'pdf'
+        ? 'application/pdf'
+        : 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
 
     setState(() => _uploading = true);
     try {
@@ -77,101 +76,99 @@ class _StudyScreenState extends State<StudyScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
-      body:
-          _loading
-              ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF7B61FF)),
-              )
-              : RefreshIndicator(
-                onRefresh: _loadMaterials,
-                child: CustomScrollView(
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+      body: _loading
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF7B61FF)),
+            )
+          : RefreshIndicator(
+              onRefresh: _loadMaterials,
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Study Materials',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Upload PDFs or slides to generate your study plan',
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          // Upload button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 52,
+                            child: ElevatedButton.icon(
+                              onPressed: _uploading ? null : _uploadFile,
+                              icon: _uploading
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.upload_file,
+                                      color: Colors.white,
+                                    ),
+                              label: Text(
+                                _uploading
+                                    ? 'Processing with AI...'
+                                    : 'Upload PDF / PPTX',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF7B61FF),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          if (_materials.isEmpty)
+                            _EmptyState()
+                          else
                             const Text(
-                              'Study Materials',
+                              'Your Materials',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 22,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(height: 6),
-                            const Text(
-                              'Upload PDFs or slides to generate your study plan',
-                              style: TextStyle(
-                                color: Colors.white54,
-                                fontSize: 13,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            // Upload button
-                            SizedBox(
-                              width: double.infinity,
-                              height: 52,
-                              child: ElevatedButton.icon(
-                                onPressed: _uploading ? null : _uploadFile,
-                                icon:
-                                    _uploading
-                                        ? const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                        : const Icon(
-                                          Icons.upload_file,
-                                          color: Colors.white,
-                                        ),
-                                label: Text(
-                                  _uploading
-                                      ? 'Processing with AI...'
-                                      : 'Upload PDF / PPTX',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF7B61FF),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            if (_materials.isEmpty)
-                              _EmptyState()
-                            else
-                              const Text(
-                                'Your Materials',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                          ],
-                        ),
+                        ],
                       ),
                     ),
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate((context, i) {
-                        final m = _materials[i];
-                        return _MaterialCard(material: m);
-                      }, childCount: _materials.length),
-                    ),
-                    const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                  ],
-                ),
+                  ),
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate((context, i) {
+                      final m = _materials[i];
+                      return _MaterialCard(material: m);
+                    }, childCount: _materials.length),
+                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                ],
               ),
+            ),
     );
   }
 }
@@ -212,14 +209,13 @@ class _MaterialCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
       child: InkWell(
-        onTap:
-            processed
-                ? () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => SyllabusScreen(material: material),
-                  ),
-                )
-                : null,
+        onTap: processed
+            ? () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => SyllabusScreen(material: material),
+                ),
+              )
+            : null,
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.all(16),
@@ -267,10 +263,9 @@ class _MaterialCard extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color:
-                                processed
-                                    ? Colors.green.withOpacity(0.2)
-                                    : Colors.orange.withOpacity(0.2),
+                            color: processed
+                                ? Colors.green.withOpacity(0.2)
+                                : Colors.orange.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
@@ -325,6 +320,9 @@ class _SyllabusScreenState extends State<SyllabusScreen> {
   Future<void> _load() async {
     try {
       _syllabus = await ApiClient.getSyllabus(widget.material['id']);
+      _completedTopics.addAll(
+        await ApiClient.getCompletedTopics(_syllabus!['id']),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -381,6 +379,7 @@ class _SyllabusScreenState extends State<SyllabusScreen> {
 
     final summary = _syllabus!['summary'] as Map<String, dynamic>;
     final topics = _syllabus!['topics'] as List<dynamic>;
+    print(topics);
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
@@ -393,16 +392,14 @@ class _SyllabusScreenState extends State<SyllabusScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           TextButton.icon(
-            onPressed:
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder:
-                        (_) => QuizScreen(
-                          syllabusId: _syllabus!['id'],
-                          quizType: 'assessment',
-                        ),
-                  ),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => QuizScreen(
+                  syllabusId: _syllabus!['id'],
+                  quizType: 'assessment',
                 ),
+              ),
+            ),
             icon: const Icon(Icons.quiz, color: Color(0xFF7B61FF)),
             label: const Text(
               'Assessment Quiz',
@@ -474,28 +471,24 @@ class _SyllabusScreenState extends State<SyllabusScreen> {
                   topic: topic,
                   isDone: isDone,
                   onComplete: isDone ? null : () => _completeTopic(topicNum),
-                  onLearn:
-                      () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder:
-                              (_) => LessonScreen(
-                                syllabusId: _syllabus!['id'],
-                                topic: topic,
-                              ),
-                        ),
+                  onLearn: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => LessonScreen(
+                        syllabusId: _syllabus!['id'],
+                        topic: topic,
                       ),
-                  onQuiz:
-                      () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder:
-                              (_) => QuizScreen(
-                                syllabusId: _syllabus!['id'],
-                                quizType: 'lesson',
-                                topicNumber: topicNum,
-                                topicTitle: topic['title'],
-                              ),
-                        ),
+                    ),
+                  ),
+                  onQuiz: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => QuizScreen(
+                        syllabusId: _syllabus!['id'],
+                        quizType: 'lesson',
+                        topicNumber: topicNum,
+                        topicTitle: topic['title'],
                       ),
+                    ),
+                  ),
                 );
               }),
             ],
@@ -565,8 +558,9 @@ class _TopicCardState extends State<_TopicCard> {
           color: const Color(0xFF1A1A2E),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color:
-                widget.isDone ? Colors.green.withOpacity(0.5) : Colors.white12,
+            color: widget.isDone
+                ? Colors.green.withOpacity(0.5)
+                : Colors.white12,
           ),
         ),
         child: Column(
@@ -574,15 +568,15 @@ class _TopicCardState extends State<_TopicCard> {
             ListTile(
               onTap: () => setState(() => _expanded = !_expanded),
               leading: CircleAvatar(
-                backgroundColor:
-                    widget.isDone
-                        ? Colors.green.withOpacity(0.2)
-                        : const Color(0xFF7B61FF).withOpacity(0.2),
+                backgroundColor: widget.isDone
+                    ? Colors.green.withOpacity(0.2)
+                    : const Color(0xFF7B61FF).withOpacity(0.2),
                 child: Text(
                   widget.isDone ? '✓' : '${topic['topic_number']}',
                   style: TextStyle(
-                    color:
-                        widget.isDone ? Colors.green : const Color(0xFF7B61FF),
+                    color: widget.isDone
+                        ? Colors.green
+                        : const Color(0xFF7B61FF),
                     fontWeight: FontWeight.bold,
                   ),
                 ),

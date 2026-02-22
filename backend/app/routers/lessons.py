@@ -4,6 +4,7 @@ Lesson content routes.
 GET  /lessons/{syllabus_id}/{topic_number}        — fetch (or generate) lesson sections
 POST /lessons/{syllabus_id}/{topic_number}/ask    — AI Q&A for that topic
 """
+
 import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +17,7 @@ from app.models.user import User
 from app.models.material import Syllabus
 from app.models.lesson_content import LessonContent
 from app.services import claude as claude_svc
+from app.models.token import TokenTransaction
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
 
@@ -23,6 +25,7 @@ router = APIRouter(prefix="/lessons", tags=["lessons"])
 # ---------------------------------------------------------------------------
 # Schemas
 # ---------------------------------------------------------------------------
+
 
 class AskRequest(BaseModel):
     question: str
@@ -36,6 +39,7 @@ class AskResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 async def _get_syllabus_and_topic(
     syllabus_id: int,
@@ -65,6 +69,41 @@ async def _get_syllabus_and_topic(
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
+
+
+@router.get("/{syllabus_id}/completedTopics")
+async def is_lesson_completed(
+    syllabus_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(TokenTransaction).where(
+            TokenTransaction.transaction_type == "lesson_complete",
+            TokenTransaction.description.like(f"Lesson % of syllabus {syllabus_id}"),
+            TokenTransaction.user_id == current_user.id,
+        )
+    )
+    rows = result.scalars().all()
+
+    # Extract topic numbers from descriptions like "Lesson 3 of syllabus 12"
+    import re
+
+    topic_nums = []
+    for t in rows:
+        if not t.description:
+            continue
+        m = re.search(
+            r"Lesson\s+(\d+)\s+of\s+syllabus\s+%s" % syllabus_id, t.description
+        )
+        if m:
+            try:
+                topic_nums.append(int(m.group(1)))
+            except ValueError:
+                continue
+
+    return {"completed": topic_nums}
+
 
 @router.get("/{syllabus_id}/{topic_number}")
 async def get_lesson(

@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-const String _baseUrl = 'http://localhost:8000';
+const String _baseUrl = 'http://10.0.2.2:8000';
 
 class ApiClient {
   static String? _token;
@@ -253,6 +253,15 @@ class ApiClient {
       throw ApiException(data['detail'] ?? 'Unknown error', res.statusCode);
     }
     return jsonDecode(res.body) as List<dynamic>;
+  }
+
+  static Future<List<int>> getCompletedTopics(int syllabusId) async {
+    final res = await http.get(
+      Uri.parse('$_baseUrl/lessons/$syllabusId/completedTopics'),
+      headers: _headers,
+    );
+    final data = _handle(res);
+    return List<int>.from(data['completed']);
   }
 }
 

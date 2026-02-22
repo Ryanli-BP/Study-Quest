@@ -9,6 +9,7 @@ class LessonTopic(BaseModel):
     summary: str
     key_concepts: list[str]
     estimated_minutes: int
+    completed: bool = False
 
 
 class LessonPlanDay(BaseModel):
@@ -32,6 +33,7 @@ class SyllabusOut(BaseModel):
 
 class MaterialSummary(BaseModel):
     """Lightweight syllabus info embedded in the materials list."""
+
     id: int
     created_at: datetime
 

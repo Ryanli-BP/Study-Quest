@@ -61,7 +61,8 @@ async def complete_lesson(
         select(TokenTransaction).where(
             TokenTransaction.user_id == current_user.id,
             TokenTransaction.transaction_type == "lesson_complete",
-            TokenTransaction.description == f"Lesson {req.topic_number} of syllabus {req.syllabus_id}",
+            TokenTransaction.description
+            == f"Lesson {req.topic_number} of syllabus {req.syllabus_id}",
         )
     )
     if result.scalar_one_or_none():

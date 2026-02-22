@@ -95,11 +95,10 @@ class _CombatScreenState extends State<CombatScreen>
   void _initCombat() {
     final expProvider = context.read<ExpeditionProvider>();
     _boss = bossToEntity(widget.location);
-    _companions =
-        widget.companions.map((char) {
-          final level = expProvider.progressFor(char['id'] as int).level;
-          return companionToEntity(char, level);
-        }).toList();
+    _companions = widget.companions.map((char) {
+      final level = expProvider.progressFor(char['id'] as int).level;
+      return companionToEntity(char, level);
+    }).toList();
     _allEntities = [_boss, ..._companions];
     _log.add('⚔️ Battle begins! Defeat ${_boss.name}!');
     _advanceToNextTurn();
@@ -164,8 +163,8 @@ class _CombatScreenState extends State<CombatScreen>
     _log.add('${_currentTurn.name} uses ${ability.emoji} ${ability.name}!');
 
     if (ability.damageMultiplier > 0) {
-      final dmg =
-          (_currentTurn.effectiveAtk * ability.damageMultiplier).round();
+      final dmg = (_currentTurn.effectiveAtk * ability.damageMultiplier)
+          .round();
       _boss.takeDamage(dmg);
       _bossShakeCtrl.forward(from: 0);
       _bossFlashCtrl.forward(from: 0);
@@ -287,9 +286,8 @@ class _CombatScreenState extends State<CombatScreen>
       for (final e in alive) {
         gauges[e.id] = gauges[e.id]! + minTicks * e.spd;
       }
-      final ready =
-          alive.where((e) => gauges[e.id]! >= 100).toList()
-            ..sort((a, b) => gauges[b.id]!.compareTo(gauges[a.id]!));
+      final ready = alive.where((e) => gauges[e.id]! >= 100).toList()
+        ..sort((a, b) => gauges[b.id]!.compareTo(gauges[a.id]!));
       if (ready.isNotEmpty) {
         gauges[ready.first.id] = gauges[ready.first.id]! - 100;
         result.add(ready.first);
@@ -337,8 +335,9 @@ class _CombatScreenState extends State<CombatScreen>
           Expanded(
             child: _CompanionRow(
               companions: _companions,
-              currentTurnId:
-                  _phase == CombatPhase.playerTurn ? _currentTurn.id : null,
+              currentTurnId: _phase == CombatPhase.playerTurn
+                  ? _currentTurn.id
+                  : null,
               shakeAnim: _companionShakeAnim,
               flashCtrl: _companionFlashCtrl,
               shakingId: _shakingCompanionId,
@@ -387,10 +386,9 @@ class _BossSection extends StatelessWidget {
     return AnimatedBuilder(
       animation: Listenable.merge([shakeAnim, flashCtrl]),
       builder: (_, __) {
-        final flash =
-            flashCtrl.value > 0.5
-                ? Colors.red.withOpacity(0.45)
-                : Colors.transparent;
+        final flash = flashCtrl.value > 0.5
+            ? Colors.red.withOpacity(0.45)
+            : Colors.transparent;
         return Transform.translate(
           offset: Offset(shakeAnim.value, 0),
           child: Container(
@@ -445,11 +443,12 @@ class _BossSection extends StatelessWidget {
                     ),
                     Image(
                       image: AssetImage("assets/images/${boss.name}.png"),
-                      color:
-                          boss.currentHp == 0
-                              ? Colors.black.withOpacity(0.9)
-                              : Colors.white,
-                      colorBlendMode: BlendMode.color,
+                      color: boss.currentHp == 0
+                          ? Colors.black.withOpacity(0.9)
+                          : (boss.name == "Shadow Lord"
+                                ? Colors.red
+                                : Colors.transparent),
+                      colorBlendMode: BlendMode.multiply,
                     ),
                   ],
                 ),
@@ -459,8 +458,9 @@ class _BossSection extends StatelessWidget {
                   Wrap(
                     spacing: 6,
                     runSpacing: 4,
-                    children:
-                        boss.statusEffects.map((s) => _StatusChip(s)).toList(),
+                    children: boss.statusEffects
+                        .map((s) => _StatusChip(s))
+                        .toList(),
                   ),
                 ],
               ],
@@ -496,10 +496,9 @@ class _TurnQueue extends StatelessWidget {
             margin: const EdgeInsets.only(right: 6),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
             decoration: BoxDecoration(
-              color:
-                  isCurrent
-                      ? const Color(0xFF7B61FF).withOpacity(0.3)
-                      : Colors.white.withOpacity(0.05),
+              color: isCurrent
+                  ? const Color(0xFF7B61FF).withOpacity(0.3)
+                  : Colors.white.withOpacity(0.05),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isCurrent ? const Color(0xFF7B61FF) : Colors.white12,
@@ -508,7 +507,7 @@ class _TurnQueue extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(e.emoji, style: const TextStyle(fontSize: 14)),
+                Image(image: AssetImage("assets/images/${e.name}.png")),
                 const SizedBox(width: 4),
                 Text(
                   e.name,
@@ -550,24 +549,25 @@ class _CompanionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Row(
-        children:
-            companions
-                .map(
-                  (c) => Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 5),
-                      child: _CompanionCard(
-                        companion: c,
-                        isActive: c.id == currentTurnId,
-                        shakeAnim: shakeAnim,
-                        flashCtrl: flashCtrl,
-                        isShaking: c.id == shakingId,
-                      ),
-                    ),
+      child: GridView.count(
+        crossAxisCount: 2,
+        childAspectRatio: 1.35,
+        children: companions
+            .map(
+              (c) => Padding(
+                padding: const EdgeInsets.all(5),
+                child: SizedBox.expand(
+                  child: _CompanionCard(
+                    companion: c,
+                    isActive: c.id == currentTurnId,
+                    shakeAnim: shakeAnim,
+                    flashCtrl: flashCtrl,
+                    isShaking: c.id == shakingId,
                   ),
-                )
-                .toList(),
+                ),
+              ),
+            )
+            .toList(),
       ),
     );
   }
@@ -593,10 +593,9 @@ class _CompanionCard extends StatelessWidget {
     return AnimatedBuilder(
       animation: Listenable.merge([shakeAnim, flashCtrl]),
       builder: (_, __) {
-        final flash =
-            isShaking && flashCtrl.value > 0.5
-                ? Colors.red.withOpacity(0.5)
-                : Colors.transparent;
+        final flash = isShaking && flashCtrl.value > 0.5
+            ? Colors.red.withOpacity(0.5)
+            : Colors.transparent;
         final shakeOffset = isShaking ? shakeAnim.value : 0.0;
 
         return Transform.translate(
@@ -606,26 +605,24 @@ class _CompanionCard extends StatelessWidget {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
               decoration: BoxDecoration(
-                color:
-                    flash != Colors.transparent
-                        ? flash
-                        : isActive
-                        ? const Color(0xFF7B61FF).withOpacity(0.18)
-                        : const Color(0xFF1A1A2E),
+                color: flash != Colors.transparent
+                    ? flash
+                    : isActive
+                    ? const Color(0xFF7B61FF).withOpacity(0.18)
+                    : const Color(0xFF1A1A2E),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isActive ? const Color(0xFF7B61FF) : Colors.white12,
                   width: isActive ? 2 : 1,
                 ),
-                boxShadow:
-                    isActive
-                        ? [
-                          BoxShadow(
-                            color: const Color(0xFF7B61FF).withOpacity(0.35),
-                            blurRadius: 12,
-                          ),
-                        ]
-                        : null,
+                boxShadow: isActive
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFF7B61FF).withOpacity(0.35),
+                          blurRadius: 12,
+                        ),
+                      ]
+                    : null,
               ),
               padding: const EdgeInsets.all(8),
               child: Column(
@@ -635,20 +632,18 @@ class _CompanionCard extends StatelessWidget {
                   SizedBox(
                     width: 50,
                     height: 50,
-                    child:
-                        companion.isAlive
-                            ? Image.asset(
-                              'assets/images/${companion.name}.png',
-                              fit: BoxFit.contain,
-                              errorBuilder:
-                                  (_, __, ___) => Text(
-                                    companion.emoji,
-                                    style: const TextStyle(fontSize: 30),
-                                  ),
-                            )
-                            : const Text('💀', style: TextStyle(fontSize: 30)),
+                    child: companion.isAlive
+                        ? Image.asset(
+                            'assets/images/${companion.name}.png',
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => Text(
+                              companion.emoji,
+                              style: const TextStyle(fontSize: 30),
+                            ),
+                          )
+                        : const Text('💀', style: TextStyle(fontSize: 30)),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 2),
                   // Name
                   Text(
                     companion.name,
@@ -661,7 +656,7 @@ class _CompanionCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 2),
                   // Stats
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -671,22 +666,20 @@ class _CompanionCard extends StatelessWidget {
                         // HP bar
                         _MiniBar(
                           value: companion.hpFraction,
-                          color:
-                              companion.hpFraction > 0.5
-                                  ? Colors.green
-                                  : companion.hpFraction > 0.25
-                                  ? Colors.orange
-                                  : Colors.red,
+                          color: companion.hpFraction > 0.5
+                              ? Colors.green
+                              : companion.hpFraction > 0.25
+                              ? Colors.orange
+                              : Colors.red,
                           label: 'HP',
                         ),
                         Text(
                           '${companion.currentHp}/${companion.maxHp}',
                           style: TextStyle(
                             fontSize: 12,
-                            color:
-                                companion.hpFraction > 0.5
-                                    ? Colors.black
-                                    : Colors.white,
+                            color: companion.hpFraction > 0.5
+                                ? Colors.black
+                                : Colors.white,
                           ),
                         ),
                       ],
@@ -725,10 +718,9 @@ class _CompanionCard extends StatelessWidget {
                       spacing: 3,
                       runSpacing: 2,
                       alignment: WrapAlignment.center,
-                      children:
-                          companion.statusEffects
-                              .map((s) => _StatusChip(s))
-                              .toList(),
+                      children: companion.statusEffects
+                          .map((s) => _StatusChip(s))
+                          .toList(),
                     ),
                   ],
                 ],
@@ -811,25 +803,23 @@ class _CombatLog extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children:
-            recent
-                .asMap()
-                .entries
-                .map(
-                  (e) => Text(
-                    e.value,
-                    style: TextStyle(
-                      color:
-                          e.key == recent.length - 1
-                              ? Colors.white
-                              : Colors.white38,
-                      fontSize: 11,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                )
-                .toList(),
+        children: recent
+            .asMap()
+            .entries
+            .map(
+              (e) => Text(
+                e.value,
+                style: TextStyle(
+                  color: e.key == recent.length - 1
+                      ? Colors.white
+                      : Colors.white38,
+                  fontSize: 11,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            )
+            .toList(),
       ),
     );
   }
@@ -1048,43 +1038,40 @@ class _WonPanelState extends State<_WonPanel> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder:
-          (_) => AlertDialog(
-            backgroundColor: const Color(0xFF1A1A2E),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          '🎉 Victory!',
+          style: TextStyle(color: Colors.white, fontSize: 22),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Rewards collected:',
+              style: TextStyle(color: Colors.white54),
             ),
-            title: const Text(
-              '🎉 Victory!',
-              style: TextStyle(color: Colors.white, fontSize: 22),
+            const SizedBox(height: 12),
+            _RewardRow('🪙 Coins', '${rewards['coins']}'),
+            _RewardRow('🪨 Materials', '${rewards['materials']}'),
+            _RewardRow('⭐ XP per companion', '${rewards['xp']}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context)
+                ..pop()
+                ..pop();
+            },
+            child: const Text(
+              'Back to Island',
+              style: TextStyle(color: Color(0xFF7B61FF)),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Rewards collected:',
-                  style: TextStyle(color: Colors.white54),
-                ),
-                const SizedBox(height: 12),
-                _RewardRow('🪙 Coins', '${rewards['coins']}'),
-                _RewardRow('🪨 Materials', '${rewards['materials']}'),
-                _RewardRow('⭐ XP per companion', '${rewards['xp']}'),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context)
-                    ..pop()
-                    ..pop();
-                },
-                child: const Text(
-                  'Back to Island',
-                  style: TextStyle(color: Color(0xFF7B61FF)),
-                ),
-              ),
-            ],
           ),
+        ],
+      ),
     );
   }
 
@@ -1104,17 +1091,16 @@ class _WonPanelState extends State<_WonPanel> {
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          child:
-              _claiming
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text(
-                    '🎉 Claim Victory Rewards',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+          child: _claiming
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text(
+                  '🎉 Claim Victory Rewards',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
+                ),
         ),
       ),
     );

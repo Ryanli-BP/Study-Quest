@@ -144,9 +144,19 @@ class _BaseTab extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF7B61FF), Color(0xFF4A3AFF)],
+                colors: [
+                  Color.fromARGB(255, 53, 39, 122),
+                  Color.fromARGB(255, 43, 28, 208),
+                ],
               ),
               borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFFFFFF).withOpacity(0.4),
+                  blurRadius: 12,
+                  spreadRadius: 4,
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

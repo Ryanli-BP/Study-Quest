@@ -3,7 +3,13 @@ import 'package:flutter/material.dart';
 class Companion extends StatefulWidget {
   final String imagePath;
   final String text;
-  const Companion({super.key, required this.imagePath, required this.text});
+  final double textSize;
+  const Companion({
+    super.key,
+    required this.imagePath,
+    required this.text,
+    this.textSize = 20,
+  });
 
   @override
   State<Companion> createState() => _CompanionState();
@@ -52,7 +58,7 @@ class _CompanionState extends State<Companion>
                   widget.text,
                   style: TextStyle(
                     color: Colors.white70,
-                    fontSize: 20,
+                    fontSize: widget.textSize,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

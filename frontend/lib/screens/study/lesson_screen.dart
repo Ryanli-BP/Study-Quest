@@ -1,5 +1,8 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+
 import '../../api/api_client.dart';
 
 class LessonScreen extends StatefulWidget {
@@ -20,12 +23,14 @@ class _LessonScreenState extends State<LessonScreen> {
   List<dynamic> _sections = [];
   bool _loading = true;
   String? _error;
+  bool _isDogFocused = false;
 
   // Chat state
   final List<Map<String, String>> _chatHistory = [];
   final TextEditingController _chatController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
   bool _askingQuestion = false;
+  final GlobalKey _dogKey = GlobalKey();
 
   @override
   void initState() {
@@ -38,6 +43,146 @@ class _LessonScreenState extends State<LessonScreen> {
     _chatController.dispose();
     _chatScrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _onDogTap() async {
+    // Get dog's global position and size
+    final dogContext = _dogKey.currentContext;
+    if (dogContext == null) return;
+    final box = dogContext.findRenderObject() as RenderBox;
+    final start = box.localToGlobal(Offset.zero);
+    final size = box.size;
+
+    final media = MediaQuery.of(context).size;
+    final targetLeft = (media.width - size.width) / 2;
+    final targetTop = (media.height - size.height) / 2;
+
+    setState(() {
+      _isDogFocused = true;
+    });
+
+    final TextEditingController dialogCtrl = TextEditingController();
+
+    await showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Ask question',
+      transitionDuration: const Duration(milliseconds: 420),
+      pageBuilder: (ctx, a1, a2) {
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            return Material(
+              color: Colors.black54,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 420),
+                builder: (ctx, t, child) {
+                  final left = lerpDouble(start.dx, targetLeft, t)!;
+                  final top = lerpDouble(start.dy, targetTop, t)!;
+                  final dialogTop = top + size.height + 12.0 * t;
+                  return Stack(
+                    children: [
+                      // animated dog
+                      Positioned(
+                        left: left,
+                        top: top,
+                        child: SizedBox(
+                          width: 250,
+                          height: 250,
+                          child: Image.asset(
+                            'assets/images/brown_dog.png',
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+
+                      // dialog box under dog
+                      Positioned(
+                        left: media.width * 0.08,
+                        right: media.width * 0.08,
+                        top: dialogTop,
+                        child: Opacity(
+                          opacity: t,
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1A1A2E),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white12),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                TextField(
+                                  controller: dialogCtrl,
+                                  maxLines: null,
+                                  style: const TextStyle(color: Colors.white),
+                                  decoration: InputDecoration(
+                                    hintText: 'Ask a question...',
+                                    hintStyle: const TextStyle(
+                                      color: Colors.white38,
+                                    ),
+                                    filled: true,
+                                    fillColor: const Color(0xFF0D0D1A),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(ctx).pop();
+                                      },
+                                      child: const Text(
+                                        'Cancel',
+                                        style: TextStyle(color: Colors.white70),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        final q = dialogCtrl.text.trim();
+                                        if (q.isEmpty) return;
+                                        // set main chat controller and send
+                                        _chatController.text = q;
+                                        Navigator.of(ctx).pop();
+                                        // allow dialog to close before sending
+                                        WidgetsBinding.instance
+                                            .addPostFrameCallback((_) {
+                                              _sendQuestion();
+                                            });
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFF7B61FF,
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Ask',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _loadLesson() async {
@@ -71,9 +216,10 @@ class _LessonScreenState extends State<LessonScreen> {
 
     try {
       // Build history to send (exclude last user message, we send it as `question`)
-      final historyToSend = _chatHistory.length > 1
-          ? _chatHistory.sublist(0, _chatHistory.length - 1)
-          : <Map<String, String>>[];
+      final historyToSend =
+          _chatHistory.length > 1
+              ? _chatHistory.sublist(0, _chatHistory.length - 1)
+              : <Map<String, String>>[];
 
       final answer = await ApiClient.askQuestion(
         widget.syllabusId,
@@ -123,21 +269,26 @@ class _LessonScreenState extends State<LessonScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Topic $topicNum',
-                style:
-                    const TextStyle(color: Colors.white54, fontSize: 12)),
-            Text(topicTitle,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold)),
+            Text(
+              'Topic $topicNum',
+              style: const TextStyle(color: Colors.white54, fontSize: 12),
+            ),
+            Text(
+              topicTitle,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: _loading
-          ? _buildLoading()
-          : _error != null
+      body:
+          _loading
+              ? _buildLoading()
+              : _error != null
               ? _buildError()
               : _buildContent(),
     );
@@ -150,8 +301,10 @@ class _LessonScreenState extends State<LessonScreen> {
         children: [
           CircularProgressIndicator(color: Color(0xFF7B61FF)),
           SizedBox(height: 16),
-          Text('Generating lesson with AI...',
-              style: TextStyle(color: Colors.white54)),
+          Text(
+            'Generating lesson with AI...',
+            style: TextStyle(color: Colors.white54),
+          ),
         ],
       ),
     );
@@ -164,9 +317,11 @@ class _LessonScreenState extends State<LessonScreen> {
         children: [
           const Text('⚠️', style: TextStyle(fontSize: 48)),
           const SizedBox(height: 12),
-          Text(_error!,
-              style: const TextStyle(color: Colors.white54),
-              textAlign: TextAlign.center),
+          Text(
+            _error!,
+            style: const TextStyle(color: Colors.white54),
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () {
@@ -177,9 +332,9 @@ class _LessonScreenState extends State<LessonScreen> {
               _loadLesson();
             },
             style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF7B61FF)),
-            child:
-                const Text('Retry', style: TextStyle(color: Colors.white)),
+              backgroundColor: const Color(0xFF7B61FF),
+            ),
+            child: const Text('Retry', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -187,63 +342,116 @@ class _LessonScreenState extends State<LessonScreen> {
   }
 
   Widget _buildContent() {
-    return Column(
+    return Stack(
       children: [
-        // Scrollable lesson sections
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              ..._sections.map((s) => _SectionCard(section: s as Map<String, dynamic>)),
-              const SizedBox(height: 12),
-              // Chat history (displayed inline above input)
-              if (_chatHistory.isNotEmpty) ...[
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    children: [
-                      Expanded(child: Divider(color: Colors.white24)),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
-                        child: Text('AI Tutor',
+        Column(
+          children: [
+            // Scrollable lesson sections
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  ..._sections.map(
+                    (s) => _SectionCard(section: s as Map<String, dynamic>),
+                  ),
+                  const SizedBox(height: 12),
+                  // Chat history (displayed inline above input)
+                  if (_chatHistory.isNotEmpty) ...[
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                          Expanded(child: Divider(color: Colors.white24)),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              'AI Tutor',
+                              style: TextStyle(
+                                color: Colors.white38,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          Expanded(child: Divider(color: Colors.white24)),
+                        ],
+                      ),
+                    ),
+                    ..._chatHistory.map((msg) => _ChatBubble(message: msg)),
+                  ],
+                  if (_askingQuestion)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                          SizedBox(width: 8),
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Color(0xFF7B61FF),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'AI is thinking...',
                             style: TextStyle(
-                                color: Colors.white38, fontSize: 12)),
+                              color: Colors.white54,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
                       ),
-                      Expanded(child: Divider(color: Colors.white24)),
-                    ],
+                    ),
+                  // Extra space so content doesn't hide behind input bar
+                  const SizedBox(height: 80),
+                ],
+              ),
+            ),
+          ],
+        ),
+        Positioned(
+          left: 145,
+          bottom: -70,
+          child: GestureDetector(
+            onTap: _onDogTap,
+
+            child: Stack(
+              children: [
+                Container(
+                  width: 260,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF7B61FF),
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  child: Center(
+                    child: Text(
+                      "Need help? Ask me anything about this topic!",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
-                ..._chatHistory.map((msg) => _ChatBubble(message: msg)),
+                Padding(
+                  padding: const EdgeInsets.only(left: 135.0),
+                  child: SizedBox(
+                    width: 150,
+                    height: 150,
+                    child: Image.asset(
+                      "assets/images/brown_dog.png",
+                      fit: BoxFit.contain,
+                      key: _dogKey,
+                    ),
+                  ),
+                ),
               ],
-              if (_askingQuestion)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    children: [
-                      SizedBox(width: 8),
-                      SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Color(0xFF7B61FF),
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Text('AI is thinking...',
-                          style: TextStyle(
-                              color: Colors.white54, fontSize: 13)),
-                    ],
-                  ),
-                ),
-              // Extra space so content doesn't hide behind input bar
-              const SizedBox(height: 80),
-            ],
+            ),
           ),
         ),
-
-        // Pinned Q&A input bar
-        _buildChatInput(),
       ],
     );
   }
@@ -271,7 +479,9 @@ class _LessonScreenState extends State<LessonScreen> {
                   borderSide: BorderSide.none,
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
               onSubmitted: (_) => _sendQuestion(),
               maxLines: null,
@@ -284,13 +494,15 @@ class _LessonScreenState extends State<LessonScreen> {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: _askingQuestion
-                    ? Colors.white12
-                    : const Color(0xFF7B61FF),
+                color:
+                    _askingQuestion ? Colors.white12 : const Color(0xFF7B61FF),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.send_rounded,
-                  color: Colors.white, size: 20),
+              child: const Icon(
+                Icons.send_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
             ),
           ),
         ],
@@ -348,9 +560,14 @@ class _SectionCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF1A1A2E),
           borderRadius: BorderRadius.circular(14),
-          border: Border(
-            left: BorderSide(color: _accentColor, width: 4),
-          ),
+          border: Border.all(color: _accentColor.withOpacity(0.4)),
+          boxShadow: [
+            BoxShadow(
+              color: _accentColor.withOpacity(0.5),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -381,15 +598,20 @@ class _SectionCard extends StatelessWidget {
                   data: content,
                   styleSheet: MarkdownStyleSheet(
                     p: const TextStyle(
-                        color: Colors.white70, height: 1.6, fontSize: 14),
+                      color: Colors.white70,
+                      height: 1.6,
+                      fontSize: 14,
+                    ),
                     strong: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                     em: const TextStyle(
-                        color: Colors.white70,
-                        fontStyle: FontStyle.italic,
-                        fontSize: 14),
+                      color: Colors.white70,
+                      fontStyle: FontStyle.italic,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
             ],
@@ -400,34 +622,44 @@ class _SectionCard extends StatelessWidget {
   }
 
   Widget _buildBullets(String content) {
-    final lines = content
-        .split('\n')
-        .map((l) => l.trim())
-        .where((l) => l.isNotEmpty)
-        .toList();
+    final lines =
+        content
+            .split('\n')
+            .map((l) => l.trim())
+            .where((l) => l.isNotEmpty)
+            .toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: lines.map((line) {
-        final text = line.startsWith('•') ? line.substring(1).trim() : line;
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 3),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('• ',
-                  style: TextStyle(
+      children:
+          lines.map((line) {
+            final text = line.startsWith('•') ? line.substring(1).trim() : line;
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '• ',
+                    style: TextStyle(
                       color: _accentColor,
                       fontWeight: FontWeight.bold,
-                      fontSize: 14)),
-              Expanded(
-                child: Text(text,
-                    style: const TextStyle(
-                        color: Colors.white70, height: 1.5, fontSize: 14)),
+                      fontSize: 14,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      text,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        height: 1.5,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        );
-      }).toList(),
+            );
+          }).toList(),
     );
   }
 }
@@ -452,34 +684,33 @@ class _ChatBubble extends StatelessWidget {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isUser
-              ? const Color(0xFF7B61FF)
-              : const Color(0xFF1A1A2E),
+          color: isUser ? const Color(0xFF7B61FF) : const Color(0xFF1A1A2E),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
             bottomLeft: Radius.circular(isUser ? 16 : 4),
             bottomRight: Radius.circular(isUser ? 4 : 16),
           ),
-          border: isUser
-              ? null
-              : Border.all(color: Colors.white12),
+          border: isUser ? null : Border.all(color: Colors.white12),
         ),
         child: MarkdownBody(
           data: message['content'] ?? '',
           styleSheet: MarkdownStyleSheet(
             p: TextStyle(
-                color: isUser ? Colors.white : Colors.white70,
-                fontSize: 14,
-                height: 1.5),
+              color: isUser ? Colors.white : Colors.white70,
+              fontSize: 14,
+              height: 1.5,
+            ),
             strong: TextStyle(
-                color: isUser ? Colors.white : Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 14),
+              color: isUser ? Colors.white : Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
             em: TextStyle(
-                color: isUser ? Colors.white : Colors.white70,
-                fontStyle: FontStyle.italic,
-                fontSize: 14),
+              color: isUser ? Colors.white : Colors.white70,
+              fontStyle: FontStyle.italic,
+              fontSize: 14,
+            ),
           ),
         ),
       ),

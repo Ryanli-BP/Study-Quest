@@ -1,4 +1,4 @@
-# StudyQuest
+# StudyQuest - HackLondon 2026 – 2nd place
 
 ## Introduction
 
